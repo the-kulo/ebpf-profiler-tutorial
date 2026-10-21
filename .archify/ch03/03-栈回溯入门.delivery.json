@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "a1779f88-f715-4217-9def-2c385ddf5186",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "C:\\Users\\gly\\Desktop\\think\\ebpf-profiler-tutorial\\.archify\\flowcharts-20260114-140000\\candidate-03.json",
+  "output": "C:\\Users\\gly\\Desktop\\think\\ebpf-profiler-tutorial\\.archify\\flowcharts-20260114-140000\\03-栈回溯入门.html",
+  "specification": {
+    "sha256": "7cb344eab14bd02b4e27f2e0599e29101c27d7e5e5a21a80b328ffc74ba580af",
+    "bytes": 3005
+  },
+  "artifact": {
+    "sha256": "e663ed4b9285b0d8d3132f327e46147b3c0a6c5c65fca7ef8cc385ea812040e7",
+    "bytes": 756867
+  }
+}

@@ -1,0 +1,309 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "第 06 篇 · 混合栈穿透：LPM 调度与多世界回溯",
+    "locale": "zh-CN",
+    "output": ".archify/ch06/ch06.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/open-telemetry/opentelemetry-ebpf-profiler",
+      "revision": "3792d76dba7b856617d0c37135b2f9af2aa660cf",
+      "link_mode": "local-only"
+    }
+  },
+  "components": [
+    {
+      "id": "agent",
+      "type": "external",
+      "label": "Go Agent（用户态）",
+      "sublabel": "读 /proc/pid/maps → 写 LPM 与 segmap",
+      "pos": [30, 60],
+      "size": [270, 64],
+      "sources": [
+        { "path": "interpreter/hotspot/instance.go", "line": 690 }
+      ]
+    },
+    {
+      "id": "lpm",
+      "type": "database",
+      "label": "pid_page_to_mapping_info",
+      "sublabel": "LPM Trie · PC → bias + 程序号",
+      "pos": [400, 60],
+      "size": [290, 64],
+      "sources": [
+        { "path": "support/ebpf/types.h", "line": 1140 }
+      ]
+    },
+    {
+      "id": "resolve",
+      "type": "backend",
+      "label": "resolve_unwind_mapping",
+      "sublabel": "查 LPM + decode_bias_and_unwind_program",
+      "pos": [800, 60],
+      "size": [270, 64],
+      "sources": [
+        { "path": "support/ebpf/tracemgmt.h", "line": 843 }
+      ]
+    },
+    {
+      "id": "interp_offsets",
+      "type": "database",
+      "label": "interpreter_offsets",
+      "sublabel": "OffsetRange · hot/cold 双区间",
+      "pos": [1150, 60],
+      "size": [240, 64],
+      "sources": [
+        { "path": "support/ebpf/types.h", "line": 1092 }
+      ]
+    },
+    {
+      "id": "scheduler",
+      "type": "backend",
+      "label": "get_next_unwinder_after_native_frame",
+      "sublabel": "两层调度：LPM 主查 + interp 辅查",
+      "pos": [770, 280],
+      "size": [270, 80],
+      "sources": [
+        { "path": "support/ebpf/tracemgmt.h", "line": 972 }
+      ]
+    },
+    {
+      "id": "native",
+      "type": "backend",
+      "label": "unwind_native",
+      "sublabel": "Stack Delta 解 native 帧 · 每轮 4 帧",
+      "pos": [30, 500],
+      "size": [250, 80],
+      "sources": [
+        { "path": "support/ebpf/native_stack_trace.ebpf.c", "line": 144 }
+      ]
+    },
+    {
+      "id": "hotspot",
+      "type": "backend",
+      "label": "unwind_hotspot",
+      "sublabel": "segmap 倒推 CodeBlob · 前 4 字符分派",
+      "pos": [370, 500],
+      "size": [290, 80],
+      "sources": [
+        { "path": "support/ebpf/hotspot_tracer.ebpf.c", "line": 917 }
+      ]
+    },
+    {
+      "id": "python",
+      "type": "backend",
+      "label": "unwind_python",
+      "sublabel": "TLS 读 PyThreadState · PyProcInfo",
+      "pos": [770, 500],
+      "size": [240, 80]
+    },
+    {
+      "id": "other",
+      "type": "messagebus",
+      "label": "其他 unwinder",
+      "sublabel": "Perl / PHP / Ruby / V8 / BEAM …",
+      "pos": [1150, 500],
+      "size": [230, 80]
+    },
+    {
+      "id": "segmap",
+      "type": "database",
+      "label": "segmap（JVM CodeHeap）",
+      "sublabel": "回退指针 ≤12 步定位 CodeBlob",
+      "pos": [770, 680],
+      "size": [250, 64],
+      "sources": [
+        { "path": "support/ebpf/hotspot_tracer.ebpf.c", "line": 148 }
+      ]
+    },
+    {
+      "id": "stop",
+      "type": "backend",
+      "label": "unwind_stop + send_trace",
+      "sublabel": "收尾 · 限 29 次 tail_call",
+      "pos": [370, 720],
+      "size": [250, 64],
+      "sources": [
+        { "path": "support/ebpf/interpreter_dispatcher.ebpf.c", "line": 272 }
+      ]
+    },
+    {
+      "id": "ring",
+      "type": "messagebus",
+      "label": "trace_events ring buffer",
+      "sublabel": "BPF_RB_NO_WAKEUP 轮询",
+      "pos": [770, 820],
+      "size": [250, 64],
+      "sources": [
+        { "path": "support/ebpf/interpreter_dispatcher.ebpf.c", "line": 127 }
+      ]
+    },
+    {
+      "id": "symbolize",
+      "type": "backend",
+      "label": "用户态符号化",
+      "sublabel": "ELF 符号 · compile_id 校验 · LRU 缓存",
+      "pos": [1150, 820],
+      "size": [250, 64],
+      "sources": [
+        { "path": "interpreter/hotspot/instance.go", "line": 888 }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "agent-lpm",
+      "from": "agent",
+      "to": "lpm",
+      "label": "下发映射与 bias",
+      "variant": "dashed"
+    },
+    {
+      "id": "agent-interp",
+      "from": "agent",
+      "to": "interp_offsets",
+      "label": "写解释器 hot/cold 区间",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "bottom"
+    },
+    {
+      "id": "lpm-resolve",
+      "from": "lpm",
+      "to": "resolve",
+      "label": "LPM 最长前缀匹配"
+    },
+    {
+      "id": "resolve-sched",
+      "from": "resolve",
+      "to": "scheduler",
+      "label": "bias + 程序号"
+    },
+    {
+      "id": "interp-sched",
+      "from": "interp_offsets",
+      "to": "scheduler",
+      "label": "命中解释器区间",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "right"
+    },
+    {
+      "id": "sched-native",
+      "from": "scheduler",
+      "to": "native",
+      "label": "PROG_UNWIND_NATIVE · tail_call",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "sched-hotspot",
+      "from": "scheduler",
+      "to": "hotspot",
+      "label": "PROG_UNWIND_HOTSPOT"
+    },
+    {
+      "id": "sched-python",
+      "from": "scheduler",
+      "to": "python",
+      "label": "PROG_UNWIND_PYTHON"
+    },
+    {
+      "id": "sched-other",
+      "from": "scheduler",
+      "to": "other",
+      "label": "Perl/PHP/Ruby/V8…"
+    },
+    {
+      "id": "native-hotspot",
+      "from": "native",
+      "to": "hotspot",
+      "label": "PC 离开 codecache → 换 native",
+      "variant": "dashed"
+    },
+    {
+      "id": "hotspot-native",
+      "from": "hotspot",
+      "to": "native",
+      "label": "命中解释器 → 切 hotspot",
+      "variant": "dashed"
+    },
+    {
+      "id": "hotspot-segmap",
+      "from": "hotspot",
+      "to": "segmap",
+      "label": "segmap 回退定位 CodeBlob",
+      "variant": "dashed"
+    },
+    {
+      "id": "segmap-hotspot",
+      "from": "segmap",
+      "to": "hotspot",
+      "label": "CodeBlob 地址",
+      "variant": "dashed"
+    },
+    {
+      "id": "native-stop",
+      "from": "native",
+      "to": "stop",
+      "label": "STOP delta"
+    },
+    {
+      "id": "hotspot-stop",
+      "from": "hotspot",
+      "to": "stop",
+      "label": "帧解完 · tail_call"
+    },
+    {
+      "id": "stop-ring",
+      "from": "stop",
+      "to": "ring",
+      "label": "bpf_ringbuf_output"
+    },
+    {
+      "id": "ring-sym",
+      "from": "ring",
+      "to": "symbolize",
+      "label": "Go 轮询读空 → 符号化"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "LPM 调度中枢",
+      "items": [
+        "pid_page_to_mapping_info 一次匹配回答「谁回溯 + bias 多少」",
+        "bias_and_unwind_program：高 8 位程序号 + 低 56 位 bias 同字段",
+        "LPM 天然适合嵌套地址区间：JIT 区用更长前缀「抢」走外围映射"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "segmap 倒推",
+      "items": [
+        "segmap[i] 存「往回几段是 CodeBlob 起点」，≤12 步回退",
+        "segmap 起始地址由 Agent 埋进 LPM 条目的 file_id",
+        "内核态对 JVM 一无所知——用户态把坐标系全准备好了"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "CodeBlob 分派与跳帧",
+      "items": [
+        "类型名首 4 字节当 u32 比较：nmethod / Interpreter / vtable / Stub",
+        "nmethod 用 frame_size 跳帧 + ≤6 槽返回地址启发式扫描",
+        "合法性校验复用 LPM——调度器亦是地址校验器"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "刚性限制",
+      "items": [
+        "每次尾调用只解固定帧数（4 帧），用次数换指令预算",
+        "tailCalls ≤29 强制 STOP（32 上限留余量）",
+        "内核只搬指针和数字——字符串/符号化全留用户态"
+      ]
+    }
+  ]
+}

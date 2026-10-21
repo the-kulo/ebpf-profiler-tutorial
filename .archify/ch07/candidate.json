@@ -1,0 +1,214 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "第 07 篇 · 进程管理：懒发现、双通道与知识下发",
+    "locale": "zh-CN",
+    "output": ".archify/ch07/ch07.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/open-telemetry/opentelemetry-ebpf-profiler",
+      "revision": "3792d76dba7b856617d0c37135b2f9af2aa660cf",
+      "link_mode": "local-only"
+    }
+  },
+  "components": [
+    {
+      "id": "path1",
+      "type": "backend",
+      "label": "collect_trace: pid_information",
+      "sublabel": "查无 PID → 触发上报",
+      "pos": [30, 60],
+      "size": [230, 64],
+      "sources": [
+        { "path": "support/ebpf/tracemgmt.h", "line": 1244 }
+      ]
+    },
+    {
+      "id": "path2",
+      "type": "backend",
+      "label": "unwind_stop: 未知 PC",
+      "sublabel": "ERR_NATIVE_NO_PID_PAGE_MAPPING",
+      "pos": [30, 200],
+      "size": [230, 64],
+      "sources": [
+        { "path": "support/ebpf/interpreter_dispatcher.ebpf.c", "line": 306 }
+      ]
+    },
+    {
+      "id": "path3",
+      "type": "backend",
+      "label": "sched_process_free",
+      "sublabel": "仅报告已跟踪 PID",
+      "pos": [30, 340],
+      "size": [230, 64],
+      "sources": [
+        { "path": "support/ebpf/sched_monitor.ebpf.c", "line": 27 }
+      ]
+    },
+    {
+      "id": "ratelimit",
+      "type": "security",
+      "label": "report_pid + 令牌桶",
+      "sublabel": "指数退避 100ms→25s · priority 插队",
+      "pos": [380, 140],
+      "size": [250, 80],
+      "sources": [
+        { "path": "support/ebpf/tracemgmt.h", "line": 444 }
+      ]
+    },
+    {
+      "id": "pid_events",
+      "type": "database",
+      "label": "pid_events map",
+      "sublabel": "事实层 · 天然去重 · 周期批量捞取",
+      "pos": [720, 60],
+      "size": [240, 64],
+      "sources": [
+        { "path": "support/ebpf/interpreter_dispatcher.ebpf.c", "line": 87 }
+      ]
+    },
+    {
+      "id": "report_events",
+      "type": "messagebus",
+      "label": "report_events perf event",
+      "sublabel": "唤醒层 · inhibit_events 锁存防风暴",
+      "pos": [720, 220],
+      "size": [240, 64],
+      "sources": [
+        { "path": "support/ebpf/tracemgmt.h", "line": 287 }
+      ]
+    },
+    {
+      "id": "processEvents",
+      "type": "backend",
+      "label": "processPIDEvents",
+      "sublabel": "Go 事件循环 · pidEvents channel",
+      "pos": [380, 400],
+      "size": [230, 64],
+      "sources": [
+        { "path": "tracer/events.go", "line": 46 }
+      ]
+    },
+    {
+      "id": "sync",
+      "type": "backend",
+      "label": "SynchronizeProcess",
+      "sublabel": "读 /proc/pid/maps · FileID + bias · LPM 前缀",
+      "pos": [720, 440],
+      "size": [270, 80],
+      "sources": [
+        { "path": "processmanager/processinfo.go", "line": 595 }
+      ]
+    },
+    {
+      "id": "eim",
+      "type": "backend",
+      "label": "ExecInfoManager",
+      "sublabel": "文件去重 · 12 loader 海选 · map-in-map delta",
+      "pos": [1080, 340],
+      "size": [260, 80],
+      "sources": [
+        { "path": "processmanager/execinfomanager/manager.go", "line": 115 }
+      ]
+    },
+    {
+      "id": "lpm_write",
+      "type": "database",
+      "label": "pid_page_to_mapping_info",
+      "sublabel": "LPM 前缀写入 · {pid, prefix} → {fileID, bias}",
+      "pos": [1080, 500],
+      "size": [280, 64],
+      "sources": [
+        { "path": "processmanager/processinfo.go", "line": 319 }
+      ]
+    },
+    {
+      "id": "attach",
+      "type": "backend",
+      "label": "解释器 Attach",
+      "sublabel": "写 py_procs / hotspot_procs … per-PID map",
+      "pos": [1080, 630],
+      "size": [260, 64],
+      "sources": [
+        { "path": "interpreter/python/python.go", "line": 402 }
+      ]
+    },
+    {
+      "id": "pexit",
+      "type": "security",
+      "label": "processPIDExit",
+      "sublabel": "立即删 LPM 条目防 PID 复用串味",
+      "pos": [380, 630],
+      "size": [250, 64],
+      "sources": [
+        { "path": "processmanager/processinfo.go", "line": 491 }
+      ]
+    },
+    {
+      "id": "processed",
+      "type": "security",
+      "label": "ProcessedUntil 水位",
+      "sublabel": "管道排空后删 Go 状态 · CleanupPIDs 兜底",
+      "pos": [380, 760],
+      "size": [280, 64],
+      "sources": [
+        { "path": "processmanager/processinfo.go", "line": 948 }
+      ]
+    }
+  ],
+  "connections": [
+    { "id": "p1-rl", "from": "path1", "to": "ratelimit", "label": "查无 PID" },
+    { "id": "p2-rl", "from": "path2", "to": "ratelimit", "label": "未知 PC", "variant": "dashed" },
+    { "id": "p3-rl", "from": "path3", "to": "ratelimit", "label": "进程退出", "variant": "dashed" },
+    { "id": "rl-pe", "from": "ratelimit", "to": "pid_events", "label": "始终写入 map" },
+    { "id": "rl-re", "from": "ratelimit", "to": "report_events", "label": "限流通过 → 唤醒", "variant": "dashed" },
+    { "id": "pe-proc", "from": "pid_events", "to": "processEvents", "label": "BatchLookupAndDelete" },
+    { "id": "re-proc", "from": "report_events", "to": "processEvents", "label": "即时唤醒", "variant": "dashed" },
+    { "id": "proc-sync", "from": "processEvents", "to": "sync", "label": "SynchronizeProcess" },
+    { "id": "sync-eim", "from": "sync", "to": "eim", "label": "newFrameMapping · AddOrIncRef" },
+    { "id": "eim-lpm", "from": "eim", "to": "lpm_write", "label": "loadDeltas + LPM 前缀写入" },
+    { "id": "sync-attach", "from": "sync", "to": "attach", "label": "解释器识别 → Attach", "variant": "dashed" },
+    { "id": "lpm-attach", "from": "lpm_write", "to": "attach", "label": "映射就绪后写 proc map", "variant": "dashed" },
+    { "id": "sync-exit", "from": "sync", "to": "pexit", "label": "ENOENT / ESRCH → 退出", "variant": "dashed" },
+    { "id": "pexit-proc", "from": "pexit", "to": "processed", "label": "exitKTime 水位等管道排空" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "懒发现哲学",
+      "items": [
+        "不用 exec/fork tracepoint——采样失败本身是最精确的发现信号",
+        "只对真正被采样的进程建档，开销与价值成正比",
+        "自愈能力：未知 PC 触发重新同步，错误即触发器"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "双通道通知",
+      "items": [
+        "pid_events map：事实层，天然去重，周期批量捞取兜底",
+        "report_events perf event：唤醒层，inhibit_events 锁存防风暴",
+        "一个通道两种语义——新进程/退出由用户态读 /proc 时消歧"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "两阶段清理",
+      "items": [
+        "processPIDExit 立即删 LPM 条目——防 PID 复用串味",
+        "ProcessedUntil 水位等 trace 管道排空后再删 Go 侧状态",
+        "CleanupPIDs 定期 kill(0) 探活——快路径 + 兜底"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "ExecInfoManager 去重",
+      "items": [
+        "按文件去重：100 进程同 libc.so → stack delta 只析一次",
+        "12 个 loader 海选：逐个 Load → 认领或弃权",
+        "Stack delta 经 map-in-map 批量下发 + 中途失败精确回滚"
+      ]
+    }
+  ]
+}

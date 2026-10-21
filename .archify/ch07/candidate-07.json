@@ -1,0 +1,53 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "07: eBPF Profiler 进程管理 — 懒发现与同步",
+    "subtitle": "三条内核路径 → report_pid限流 → 双通道通知 → SynchronizeProcess → 两阶段清理",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "output": ".archify/flowcharts-20260114-140000/07-进程管理.html"
+  },
+  "lanes": [
+    { "id": "kernel", "label": "内核发现" },
+    { "id": "notify", "label": "限流与通知" },
+    { "id": "userspace", "label": "用户态同步" },
+    { "id": "cleanup", "label": "退出清理" }
+  ],
+  "phases": [
+    { "id": "p1", "label": "内核发现与上报", "fromCol": 0, "toCol": 2 },
+    { "id": "p2", "label": "限流通知", "fromCol": 3, "toCol": 4, "variant": "emphasis" },
+    { "id": "p3", "label": "用户态同步与清理", "fromCol": 5, "toCol": 5 }
+  ],
+  "mainPath": ["collect", "report", "limit", "events_map", "sync", "eim", "lpm", "attach"],
+  "nodes": [
+    { "id": "collect", "lane": "kernel", "col": 0, "type": "backend", "label": "collect_trace", "sublabel": "pid_information查无PID", "width": 155, "yOffset": -65 },
+    { "id": "unwind", "lane": "kernel", "col": 0, "type": "backend", "label": "unwind_stop", "sublabel": "未知PC映射→上报", "width": 155, "yOffset": 65 },
+    { "id": "sched_free", "lane": "kernel", "col": 1, "type": "backend", "label": "sched_process_free", "sublabel": "仅报告已跟踪PID", "width": 155 },
+    { "id": "report", "lane": "notify", "col": 2, "type": "security", "label": "report_pid", "sublabel": "统一上报入口", "width": 140 },
+    { "id": "limit", "lane": "notify", "col": 3, "type": "security", "label": "令牌桶限流", "sublabel": "指数退避100ms→25s", "width": 150 },
+    { "id": "events_map", "lane": "notify", "col": 4, "type": "database", "label": "pid_events map", "sublabel": "存事实·天然去重", "width": 150, "yOffset": -45 },
+    { "id": "perf", "lane": "notify", "col": 4, "type": "messagebus", "label": "report_events", "sublabel": "perf唤醒+inhibit锁存", "width": 155, "yOffset": 45 },
+    { "id": "sync", "lane": "userspace", "col": 5, "type": "backend", "label": "SynchronizeProcess", "sublabel": "读/proc/maps→FileID+bias", "width": 155, "yOffset": -80 },
+    { "id": "eim", "lane": "userspace", "col": 5, "type": "backend", "label": "ExecInfoManager", "sublabel": "文件去重·12loader海选", "width": 155, "yOffset": 0 },
+    { "id": "lpm", "lane": "userspace", "col": 5, "type": "database", "label": "LPM前缀写入", "sublabel": "pid_page_to_mapping_info", "width": 155, "yOffset": 80 },
+    { "id": "attach", "lane": "cleanup", "col": 5, "type": "backend", "label": "解释器Attach", "sublabel": "写py_procs等proc map", "width": 150, "yOffset": -50 },
+    { "id": "pexit", "lane": "cleanup", "col": 5, "type": "security", "label": "processPIDExit", "sublabel": "立即删LPM防PID复用", "width": 160, "yOffset": 45 },
+    { "id": "processed", "lane": "cleanup", "col": 5, "type": "security", "label": "ProcessedUntil", "sublabel": "水位排空后删Go状态", "width": 160, "yOffset": 140 }
+  ],
+  "edges": [
+    { "id": "e01", "from": "collect", "to": "report", "variant": "emphasis", "label": "查无PID" },
+    { "id": "e02", "from": "unwind", "to": "report", "variant": "dashed", "label": "未知PC" },
+    { "id": "e03", "from": "sched_free", "to": "report", "variant": "dashed", "label": "进程退出" },
+    { "id": "e04", "from": "report", "to": "limit", "variant": "emphasis" },
+    { "id": "e05", "from": "limit", "to": "events_map", "variant": "emphasis", "label": "写map存事实" },
+    { "id": "e06", "from": "limit", "to": "perf", "variant": "dashed", "label": "发perf事件", "role": "async" },
+    { "id": "e07", "from": "perf", "to": "sync", "variant": "dashed", "label": "唤醒用户态", "role": "async" },
+    { "id": "e08", "from": "events_map", "to": "sync", "variant": "emphasis", "label": "周期批量捞取" },
+    { "id": "e09", "from": "sync", "to": "eim", "variant": "emphasis", "label": "去重加载" },
+    { "id": "e10", "from": "eim", "to": "lpm", "variant": "emphasis", "label": "下发delta" },
+    { "id": "e11", "from": "lpm", "to": "attach", "variant": "emphasis", "label": "写入map" },
+    { "id": "e12", "from": "sync", "to": "pexit", "variant": "security", "label": "ENOENT→退出", "role": "error" },
+    { "id": "e13", "from": "pexit", "to": "processed", "variant": "emphasis", "label": "管道排空" }
+  ]
+}

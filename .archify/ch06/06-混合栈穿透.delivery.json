@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "8bc36f7f-91e7-489f-bbbe-9c081e00f43f",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "C:\\Users\\gly\\Desktop\\think\\ebpf-profiler-tutorial\\.archify\\flowcharts-20260114-140000\\candidate-06.json",
+  "output": "C:\\Users\\gly\\Desktop\\think\\ebpf-profiler-tutorial\\.archify\\flowcharts-20260114-140000\\06-混合栈穿透.html",
+  "specification": {
+    "sha256": "fd783294afe6b7d1595f209c65b26c2f58f672cbf5bfae2ca825d2309d29bab0",
+    "bytes": 3197
+  },
+  "artifact": {
+    "sha256": "4e008f0249c7d6f05784ed5cbe05456c6b4acf6078cfed5c4664b59bd6fbc2b1",
+    "bytes": 758491
+  }
+}

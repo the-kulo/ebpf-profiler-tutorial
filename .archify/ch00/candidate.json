@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "项目全景：OpenTelemetry eBPF Profiler",
+    "locale": "zh-CN",
+    "output": ".archify/architecture-ch00-20261012-163939/ch00.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/open-telemetry/opentelemetry-ebpf-profiler",
+      "revision": "3792d76dba7b856617d0c37135b2f9af2aa660cf",
+      "link_mode": "local-only"
+    }
+  },
+  "components": [
+    { "id": "perf", "type": "cloud", "label": "定时器 / perf event", "sublabel": "每 CPU 每秒 20 次", "pos": [30, 140], "size": [220, 64], "sources": [{ "path": "tracer/tracer.go", "line": 1254 }] },
+    { "id": "entry", "type": "backend", "label": "native_tracer_entry", "sublabel": "读寄存器 · 初始化回溯", "pos": [30, 320], "size": [220, 64], "sources": [{ "path": "support/ebpf/native_stack_trace.ebpf.c", "line": 201 }] },
+    { "id": "dispatch", "type": "backend", "label": "dispatcher 调度", "sublabel": "按 PC 尾调用 unwinder", "pos": [360, 320], "size": [250, 64], "sources": [{ "path": "support/ebpf/interpreter_dispatcher.ebpf.c", "line": 272 }] },
+    { "id": "stop", "type": "backend", "label": "unwind_stop", "sublabel": "收尾 · 发送 trace", "pos": [690, 320], "size": [200, 64], "sources": [{ "path": "support/ebpf/interpreter_dispatcher.ebpf.c", "line": 272 }] },
+    { "id": "map", "type": "messagebus", "label": "map / ring buffer", "sublabel": "内核↔用户态通道", "pos": [360, 520], "size": [250, 64], "sources": [{ "path": "support/ebpf/interpreter_dispatcher.ebpf.c", "line": 127 }] },
+    { "id": "tracer", "type": "backend", "label": "tracer", "sublabel": "加载挂载 eBPF · 事件泵", "pos": [30, 700], "size": [220, 64], "sources": [{ "path": "tracer/tracer.go", "line": 444 }] },
+    { "id": "pm", "type": "backend", "label": "process manager", "sublabel": "进程发现 · 下发回溯知识", "pos": [360, 700], "size": [250, 64], "sources": [{ "path": "processmanager/processinfo.go", "line": 595 }] },
+    { "id": "handler", "type": "backend", "label": "trace handler", "sublabel": "内核格式→用户态格式", "pos": [690, 700], "size": [200, 64], "sources": [{ "path": "tracer/tracer.go", "line": 1100 }] },
+    { "id": "reporter", "type": "cloud", "label": "reporter", "sublabel": "聚合 · OTLP · gRPC", "pos": [690, 920], "size": [200, 64], "sources": [{ "path": "reporter/base_reporter.go", "line": 48 }] },
+    { "id": "collector", "type": "external", "label": "后端 Collector", "sublabel": "OTLP profiles 接收", "pos": [690, 1100], "size": [200, 64] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Linux 内核", "wraps": ["perf", "entry", "dispatch", "stop"], "pad": 12 },
+    { "kind": "region", "label": "用户态 Go agent", "wraps": ["tracer", "pm", "handler", "reporter"], "pad": 12 }
+  ],
+  "connections": [
+    { "id": "perf-entry", "from": "perf", "to": "entry", "label": "时钟中断触发" },
+    { "id": "entry-dispatch", "from": "entry", "to": "dispatch", "label": "调度回溯" },
+    { "id": "dispatch-stop", "from": "dispatch", "to": "stop", "label": "收尾上报" },
+    { "id": "stop-map", "from": "stop", "to": "map", "label": "完整 trace" },
+    { "id": "map-tracer", "from": "map", "to": "tracer", "label": "采样数据" },
+    { "id": "tracer-pm", "from": "tracer", "to": "pm", "label": "PID 事件" },
+    { "id": "pm-map", "from": "pm", "to": "map", "label": "映射/回溯知识", "variant": "dashed" },
+    { "id": "handler-reporter", "from": "handler", "to": "reporter", "label": "加工后 trace" },
+    { "id": "reporter-collector", "from": "reporter", "to": "collector", "label": "OTLP gRPC", "variant": "emphasis" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "采样链路", "items": ["perf 中断 → native_tracer_entry → dispatcher → unwind_stop", "回溯在内核态完成，只有坐标回传用户态"] },
+    { "dot": "emerald", "title": "用户态职责", "items": ["tracer：加载/挂载 eBPF 与事件泵", "process manager：进程发现 + 下发回溯知识", "trace handler：内核格式转用户态格式", "reporter：聚合计数、OTLP gRPC 推送"] },
+    { "dot": "rose", "title": "四条军规", "items": ["要快：回溯必须在内核完成（微秒级预算）", "要稳：verifier 限制 → 尾调用接力", "要通吃：dispatcher + 每语言一个 unwinder", "要零依赖：符号化后置，agent 只发 fileID+偏移"] }
+  ]
+}

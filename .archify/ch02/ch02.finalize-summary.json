@@ -1,0 +1,311 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "C:\\Users\\gly\\Desktop\\think\\ebpf-profiler-tutorial\\.archify\\architecture-ch02-20261012-163939\\candidate.json",
+    "sha256": "f9e4f89ecf194a35d6db9f9d0eab35b701a4911de5ae70f900f61161924ee4c3",
+    "bytes": 9590
+  },
+  "artifact": {
+    "path": "C:\\Users\\gly\\Desktop\\think\\ebpf-profiler-tutorial\\.archify\\architecture-ch02-20261012-163939\\ch02.html",
+    "sha256": "6001761783731255b290036525b52ae409d48d4908a218c0c33c7633fdbb2286",
+    "bytes": 778287
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "C:\\Users\\gly\\Desktop\\think\\ebpf-profiler-tutorial\\.archify\\architecture-ch02-20261012-163939\\ch02.finalize.json",
+    "summaryReceipt": "C:\\Users\\gly\\Desktop\\think\\ebpf-profiler-tutorial\\.archify\\architecture-ch02-20261012-163939\\ch02.finalize-summary.json",
+    "browserCheckReceipt": "C:\\Users\\gly\\Desktop\\think\\ebpf-profiler-tutorial\\.archify\\architecture-ch02-20261012-163939\\ch02.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.0.1",
+    "availableVersion": "3.0.1",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-11T11:34:22.355Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 2578,
+  "visualReviewRecommendation": {
+    "action": "inspect-route-readability",
+    "signals": {
+      "resolvedCrossovers": 8,
+      "routesOverSuggestedBends": 4
+    },
+    "reason": "Automated gates passed, but crossings or detours still need perceptual review before claiming visual quality.",
+    "affectedRoutes": {
+      "crossings": [
+        {
+          "left": {
+            "id": "rewrite-loadprobe",
+            "from": "rewrite",
+            "to": "loadprobe",
+            "label": "同套程序 kprobe 化",
+            "collectionIndex": 7,
+            "artifactIndex": 8
+          },
+          "right": {
+            "id": "perfev-goes",
+            "from": "perfev",
+            "to": "goes",
+            "label": "事件驱动唤醒",
+            "collectionIndex": 11,
+            "artifactIndex": 12
+          },
+          "point": [
+            1084,
+            455.4
+          ]
+        },
+        {
+          "left": {
+            "id": "rewrite-loadprobe",
+            "from": "rewrite",
+            "to": "loadprobe",
+            "label": "同套程序 kprobe 化",
+            "collectionIndex": 7,
+            "artifactIndex": 8
+          },
+          "right": {
+            "id": "pidev-goes",
+            "from": "pidev",
+            "to": "goes",
+            "label": "BatchLookupAndDelete",
+            "collectionIndex": 12,
+            "artifactIndex": 13
+          },
+          "point": [
+            1085,
+            597
+          ]
+        },
+        {
+          "left": {
+            "id": "progs-ring",
+            "from": "progs",
+            "to": "ring",
+            "label": "尾调用回溯",
+            "collectionIndex": 9,
+            "artifactIndex": 10
+          },
+          "right": {
+            "id": "pidev-goes",
+            "from": "pidev",
+            "to": "goes",
+            "label": "BatchLookupAndDelete",
+            "collectionIndex": 12,
+            "artifactIndex": 13
+          },
+          "point": [
+            714,
+            635.4
+          ]
+        },
+        {
+          "left": {
+            "id": "ring-goes",
+            "from": "ring",
+            "to": "goes",
+            "label": "轮询读空",
+            "collectionIndex": 10,
+            "artifactIndex": 11
+          },
+          "right": {
+            "id": "pidev-goes",
+            "from": "pidev",
+            "to": "goes",
+            "label": "BatchLookupAndDelete",
+            "collectionIndex": 12,
+            "artifactIndex": 13
+          },
+          "point": [
+            714,
+            759
+          ],
+          "sharedNode": "goes"
+        },
+        {
+          "left": {
+            "id": "ring-goes",
+            "from": "ring",
+            "to": "goes",
+            "label": "轮询读空",
+            "collectionIndex": 10,
+            "artifactIndex": 11
+          },
+          "right": {
+            "id": "types-unsafe",
+            "from": "types",
+            "to": "unsafe",
+            "label": "布局契约",
+            "collectionIndex": 14,
+            "artifactIndex": 15
+          },
+          "point": [
+            530,
+            856
+          ]
+        },
+        {
+          "left": {
+            "id": "perfev-goes",
+            "from": "perfev",
+            "to": "goes",
+            "label": "事件驱动唤醒",
+            "collectionIndex": 11,
+            "artifactIndex": 12
+          },
+          "right": {
+            "id": "pidev-goes",
+            "from": "pidev",
+            "to": "goes",
+            "label": "BatchLookupAndDelete",
+            "collectionIndex": 12,
+            "artifactIndex": 13
+          },
+          "point": [
+            1084,
+            597
+          ],
+          "sharedNode": "goes"
+        },
+        {
+          "left": {
+            "id": "perfev-goes",
+            "from": "perfev",
+            "to": "goes",
+            "label": "事件驱动唤醒",
+            "collectionIndex": 11,
+            "artifactIndex": 12
+          },
+          "right": {
+            "id": "types-unsafe",
+            "from": "types",
+            "to": "unsafe",
+            "label": "布局契约",
+            "collectionIndex": 14,
+            "artifactIndex": 15
+          },
+          "point": [
+            1084,
+            856
+          ]
+        },
+        {
+          "left": {
+            "id": "pidev-goes",
+            "from": "pidev",
+            "to": "goes",
+            "label": "BatchLookupAndDelete",
+            "collectionIndex": 12,
+            "artifactIndex": 13
+          },
+          "right": {
+            "id": "types-unsafe",
+            "from": "types",
+            "to": "unsafe",
+            "label": "布局契约",
+            "collectionIndex": 14,
+            "artifactIndex": 15
+          },
+          "point": [
+            714,
+            856
+          ]
+        }
+      ],
+      "detours": [
+        {
+          "relationship": {
+            "id": "maps-rewrite",
+            "from": "maps",
+            "to": "rewrite",
+            "label": "fd 可用",
+            "collectionIndex": 5,
+            "artifactIndex": 6
+          },
+          "bends": 4,
+          "stretch": 1.258
+        },
+        {
+          "relationship": {
+            "id": "rewrite-loadprog",
+            "from": "rewrite",
+            "to": "loadprog",
+            "label": "指令改写完成",
+            "collectionIndex": 6,
+            "artifactIndex": 7
+          },
+          "bends": 3,
+          "stretch": 1
+        },
+        {
+          "relationship": {
+            "id": "pidev-goes",
+            "from": "pidev",
+            "to": "goes",
+            "label": "BatchLookupAndDelete",
+            "collectionIndex": 12,
+            "artifactIndex": 13
+          },
+          "bends": 3,
+          "stretch": 1
+        },
+        {
+          "relationship": {
+            "id": "types-unsafe",
+            "from": "types",
+            "to": "unsafe",
+            "label": "布局契约",
+            "collectionIndex": 14,
+            "artifactIndex": 15
+          },
+          "bends": 3,
+          "stretch": 1.047,
+          "directCorridorBlockers": [
+            {
+              "id": "goes",
+              "label": "事件循环",
+              "box": [
+                400,
+                880,
+                260,
+                64
+              ]
+            }
+          ]
+        }
+      ],
+      "truncated": false
+    },
+    "hints": [
+      "rewrite → loadprobe crosses perfev → goes: move the node of whichever is a branch, return, or second entrance to the other side of the main path, so that relationship runs through an empty corridor.",
+      "rewrite → loadprobe crosses pidev → goes: move the node of whichever is a branch, return, or second entrance to the other side of the main path, so that relationship runs through an empty corridor.",
+      "progs → ring crosses pidev → goes: move the node of whichever is a branch, return, or second entrance to the other side of the main path, so that relationship runs through an empty corridor.",
+      "ring → goes and pidev → goes cross next to goes: move node ring or pidev so the two reach goes from different sides (for example one level with it, one directly above or below it).",
+      "ring → goes crosses types → unsafe: move the node of whichever is a branch, return, or second entrance to the other side of the main path, so that relationship runs through an empty corridor.",
+      "perfev → goes and pidev → goes cross next to goes: move node perfev or pidev so the two reach goes from different sides (for example one level with it, one directly above or below it).",
+      "perfev → goes crosses types → unsafe: move the node of whichever is a branch, return, or second entrance to the other side of the main path, so that relationship runs through an empty corridor.",
+      "pidev → goes crosses types → unsafe: move the node of whichever is a branch, return, or second entrance to the other side of the main path, so that relationship runs through an empty corridor."
+    ],
+    "repair": "Trace these relationships at the desktop viewport. For Architecture, use references/architecture-layout-repair.md: reflow a blocked main path or tangled connected scene, and repair an isolated defect locally only when the surrounding composition is accepted. Preserve all semantic content and user-fixed geometry. Rerun finalize once after the edit."
+  }
+}

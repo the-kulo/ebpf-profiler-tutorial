@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "d5e1435a-272b-455f-937b-8c611514d30c",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "C:\\Users\\gly\\Desktop\\think\\ebpf-profiler-tutorial\\.archify\\flowcharts-20260114-140000\\candidate-07.json",
+  "output": "C:\\Users\\gly\\Desktop\\think\\ebpf-profiler-tutorial\\.archify\\flowcharts-20260114-140000\\07-进程管理.html",
+  "specification": {
+    "sha256": "3f73f6bd337b70f36595476e32e5353064888a3961b86a58251d4a9c9585e922",
+    "bytes": 4517
+  },
+  "artifact": {
+    "sha256": "023fa165fe1457564f87bb217a605011043738b67c8f3ec710272e6ca314a149",
+    "bytes": 767351
+  }
+}

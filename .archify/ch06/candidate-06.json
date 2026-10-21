@@ -1,0 +1,47 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "混合栈穿透：一条 trace 穿越四个世界",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "output": ".archify/flowcharts-20260114-140000/06-混合栈穿透.html"
+  },
+  "lanes": [
+    { "id": "ebpf", "label": "eBPF 内核态" },
+    { "id": "user", "label": "用户态 Go" }
+  ],
+  "phases": [
+    { "id": "p1", "label": "采样触发", "fromCol": 0, "toCol": 1 },
+    { "id": "p2", "label": "LPM 调度与 JIT 回溯", "fromCol": 2, "toCol": 4 },
+    { "id": "p3", "label": "收尾与符号化", "fromCol": 5, "toCol": 5 }
+  ],
+  "mainPath": ["perf", "collect", "lpm", "hotspot", "stop", "ringbuf", "symbolize"],
+  "nodes": [
+    { "id": "perf", "lane": "ebpf", "col": 0, "type": "cloud", "label": "Perf 采样中断", "sublabel": "定时器开火", "width": 140 },
+    { "id": "collect", "lane": "ebpf", "col": 1, "type": "backend", "label": "collect_trace", "sublabel": "抓内核栈 + 用户态寄存器", "width": 160 },
+    { "id": "discover", "lane": "user", "col": 1, "type": "backend", "label": "Agent 发现映射", "sublabel": "读 /proc/pid/maps 写 LPM", "width": 155 },
+
+    { "id": "lpm", "lane": "ebpf", "col": 2, "type": "backend", "label": "LPM Trie 查询", "sublabel": "decode 程序号 + bias", "width": 150 },
+    { "id": "native", "lane": "ebpf", "col": 3, "type": "backend", "label": "unwind_native", "sublabel": "Stack Delta 解帧", "width": 140 },
+    { "id": "hotspot", "lane": "ebpf", "col": 4, "type": "backend", "label": "unwind_hotspot", "sublabel": "segmap 定位 CodeBlob", "width": 150 },
+
+    { "id": "stop", "lane": "ebpf", "col": 5, "type": "backend", "label": "unwind_stop", "sublabel": "收尾 补 APM ID", "width": 140 },
+    { "id": "ringbuf", "lane": "ebpf", "col": 5, "type": "messagebus", "label": "trace_events", "sublabel": "ring buffer 中转", "width": 140, "yOffset": 90 },
+
+    { "id": "symbolize", "lane": "user", "col": 5, "type": "backend", "label": "符号化", "sublabel": "ELF 符号 + compile_id 校验", "width": 155, "yOffset": 90 }
+  ],
+  "edges": [
+    { "id": "e01", "from": "perf", "to": "collect", "variant": "default" },
+    { "id": "e02", "from": "collect", "to": "lpm", "variant": "emphasis", "label": "tail_call" },
+    { "id": "e03", "from": "lpm", "to": "hotspot", "variant": "emphasis", "label": "HOTSPOT" },
+    { "id": "e04", "from": "lpm", "to": "native", "variant": "dashed", "label": "NATIVE" },
+    { "id": "e05", "from": "native", "to": "hotspot", "variant": "dashed", "label": "命中解释器", "role": "branch" },
+    { "id": "e06", "from": "hotspot", "to": "native", "variant": "dashed", "label": "离开 codecache", "role": "branch" },
+    { "id": "e07", "from": "native", "to": "stop", "variant": "emphasis", "label": "解完" },
+    { "id": "e08", "from": "hotspot", "to": "stop", "variant": "dashed", "label": "帧解完" },
+    { "id": "e09", "from": "stop", "to": "ringbuf", "variant": "default" },
+    { "id": "e10", "from": "ringbuf", "to": "symbolize", "variant": "default" },
+    { "id": "e11", "from": "discover", "to": "lpm", "variant": "dashed", "label": "写 LPM 条目", "role": "async" }
+  ]
+}

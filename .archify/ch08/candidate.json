@@ -1,0 +1,198 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "第 08 篇 · 聚合与上报：从采样到 OTLP gRPC 推送",
+    "locale": "zh-CN",
+    "output": ".archify/ch08/ch08.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/open-telemetry/opentelemetry-ebpf-profiler",
+      "revision": "3792d76dba7b856617d0c37135b2f9af2aa660cf",
+      "link_mode": "local-only"
+    }
+  },
+  "components": [
+    {
+      "id": "tracer",
+      "type": "backend",
+      "label": "Tracer 事件循环",
+      "sublabel": "读 ring buffer · 符号化 · *libpf.Trace",
+      "pos": [30, 60],
+      "size": [220, 64]
+    },
+    {
+      "id": "report",
+      "type": "backend",
+      "label": "ReportTraceEvent",
+      "sublabel": "入队（不阻塞）",
+      "pos": [30, 200],
+      "size": [200, 64],
+      "sources": [
+        { "path": "reporter/iface.go", "line": 29 }
+      ]
+    },
+    {
+      "id": "tracehash",
+      "type": "backend",
+      "label": "TraceHash 指纹",
+      "sublabel": "xxh3-128 · (FileID, AddressOrLineno)",
+      "pos": [360, 200],
+      "size": [240, 64],
+      "sources": [
+        { "path": "libpf/trace.go", "line": 165 }
+      ]
+    },
+    {
+      "id": "tree",
+      "type": "database",
+      "label": "TraceEventsTree",
+      "sublabel": "三层 key：ResourceKey → TypeMetadata → SampleKey",
+      "pos": [360, 360],
+      "size": [290, 80],
+      "sources": [
+        { "path": "reporter/samples/samples.go", "line": 42 }
+      ]
+    },
+    {
+      "id": "hit",
+      "type": "backend",
+      "label": "命中已有 Key",
+      "sublabel": "仅 append Timestamps + Values",
+      "pos": [720, 250],
+      "size": [230, 64],
+      "sources": [
+        { "path": "reporter/base_reporter.go", "line": 86 }
+      ]
+    },
+    {
+      "id": "miss",
+      "type": "backend",
+      "label": "首次出现",
+      "sublabel": "新建 Entry · 复制 Frames",
+      "pos": [720, 390],
+      "size": [220, 64],
+      "sources": [
+        { "path": "reporter/base_reporter.go", "line": 101 }
+      ]
+    },
+    {
+      "id": "runloop",
+      "type": "messagebus",
+      "label": "runLoop Tick",
+      "sublabel": "5 秒 ± 20% jitter · swap-clear 换出旧树",
+      "pos": [30, 440],
+      "size": [260, 64],
+      "sources": [
+        { "path": "reporter/runloop.go", "line": 19 }
+      ]
+    },
+    {
+      "id": "swap",
+      "type": "backend",
+      "label": "swap-clear",
+      "sublabel": "三行换桶 · delta 语义 · 微秒持锁",
+      "pos": [360, 560],
+      "size": [240, 64],
+      "sources": [
+        { "path": "reporter/otlp_reporter.go", "line": 116 }
+      ]
+    },
+    {
+      "id": "generate",
+      "type": "backend",
+      "label": "pdata.Generate",
+      "sublabel": "Dictionary 六类表去重 · index 编码",
+      "pos": [720, 560],
+      "size": [250, 80],
+      "sources": [
+        { "path": "reporter/internal/pdata/generate.go", "line": 30 }
+      ]
+    },
+    {
+      "id": "otlp",
+      "type": "cloud",
+      "label": "OTLPReporter",
+      "sublabel": "gRPC/gzip push · 5s 超时 · 失败即弃",
+      "pos": [1080, 500],
+      "size": [260, 64],
+      "sources": [
+        { "path": "reporter/otlp_reporter.go", "line": 136 }
+      ]
+    },
+    {
+      "id": "collector_rep",
+      "type": "external",
+      "label": "CollectorReporter",
+      "sublabel": "内嵌模式 · 函数调用 pipeline",
+      "pos": [1080, 640],
+      "size": [260, 64],
+      "sources": [
+        { "path": "reporter/collector_reporter.go", "line": 24 }
+      ]
+    },
+    {
+      "id": "connect",
+      "type": "security",
+      "label": "waitGrpcEndpoint",
+      "sublabel": "启动阻塞建连 · 1min backoff × 5 次",
+      "pos": [1080, 280],
+      "size": [260, 64],
+      "sources": [
+        { "path": "reporter/otlp_reporter.go", "line": 145 }
+      ]
+    }
+  ],
+  "connections": [
+    { "id": "tracer-report", "from": "tracer", "to": "report", "label": "*libpf.Trace + meta" },
+    { "id": "report-hash", "from": "report", "to": "tracehash", "label": "求 Hash" },
+    { "id": "hash-tree", "from": "tracehash", "to": "tree", "label": "SampleKey{Hash, TID, CPU…}" },
+    { "id": "tree-hit", "from": "tree", "to": "hit", "label": "已存在" },
+    { "id": "tree-miss", "from": "tree", "to": "miss", "label": "首次", "variant": "dashed" },
+    { "id": "hit-run", "from": "hit", "to": "runloop", "label": "返回", "variant": "dashed" },
+    { "id": "miss-run", "from": "miss", "to": "runloop", "label": "返回", "variant": "dashed" },
+    { "id": "run-swap", "from": "runloop", "to": "swap", "label": "每 5s 触发" },
+    { "id": "swap-gen", "from": "swap", "to": "generate", "label": "换出的旧树" },
+    { "id": "gen-otlp", "from": "generate", "to": "otlp", "label": "OTLP Profiles Payload" },
+    { "id": "gen-collector", "from": "generate", "to": "collector_rep", "label": "内嵌路径", "variant": "dashed" },
+    { "id": "connect-otlp", "from": "connect", "to": "otlp", "label": "建连成功 → Export", "variant": "dashed" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "三层聚合结构",
+      "items": [
+        "ResourceKey：容器ID/服务名/PID——这是谁的样本",
+        "TypeMetadata：on-CPU / off-CPU——哪种测量",
+        "SampleKey：Hash + TID + CPU + SpanID——哪条栈"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "聚合核心优化",
+      "items": [
+        "命中已有 Key 只 append Timestamps——Frames 零拷贝",
+        "内存从 O(采样数×栈) 降到 O(不同栈×栈 + 采样数×16B)",
+        "聚合树就是 OTLP wire format 的预排版"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "swap-clear + delta 语义",
+      "items": [
+        "三行代码换出整棵树：持锁微秒级，不阻塞采集路径",
+        "新窗口从零累计——内存恒定一个窗口大小",
+        "CollectionStartTime / DurationNano 精确标注窗口边界"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "失败即弃哲学",
+      "items": [
+        "Profiling 是统计性数据：丢一个窗口火焰图形状不变",
+        "无重试队列/磁盘缓冲/反压——防 OOM 伤害宿主机",
+        "两种形态：独立 agent gRPC push vs Collector receiver 内嵌"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Go与eBPF的对话：加载、配置与事件通道",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [1068, 440],
+    "output": ".archify/flowcharts-20260114-140000/02-Go与eBPF的对话.html"
+  },
+  "stages": [
+    { "label": "嵌入" },
+    { "label": "加载" },
+    { "label": "运行" },
+    { "label": "解析" },
+    { "label": "契约" }
+  ],
+  "nodes": [
+    { "id": "embed", "type": "frontend", "label": "go:embed", "sublabel": "编译期嵌入 ELF", "stage": 0, "row": 0 },
+    { "id": "load", "type": "backend", "label": "加载流水线", "sublabel": "解析 → 配置 → Map → 装载", "stage": 1, "row": 0 },
+    { "id": "channels", "type": "messagebus", "label": "三条回传通道", "sublabel": "ringbuf / perf / hash", "stage": 2, "row": 0 },
+    { "id": "parser", "type": "backend", "label": "零拷贝解析", "sublabel": "零拷贝 → pipeline", "stage": 3, "row": 0 },
+    { "id": "godefs", "type": "security", "label": "类型契约", "sublabel": "cgo -godefs 类型生成", "stage": 4, "row": 0 }
+  ],
+  "flows": [
+    { "id": "f_embed_load", "from": "embed", "to": "load", "label": "ELF 字节码", "variant": "emphasis" },
+    { "id": "f_load_channels", "from": "load", "to": "channels", "label": "挂载到内核", "variant": "emphasis" },
+    { "id": "f_channels_parser", "from": "channels", "to": "parser", "label": "raw []byte", "variant": "default" },
+    { "id": "f_godefs_parser", "from": "godefs", "to": "parser", "label": "类型定义", "variant": "dashed" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "加载流水线",
+      "items": [
+        "LoadCollectionSpec 解析 ELF → 按内核版本裁剪不适配程序",
+        "loadRodataVars BTF 探测注入配置 → loadAllMaps 动态调尺寸",
+        "rewriteMaps 占位符改写为真实 map fd → loadPerfUnwinders 装载并填 PROG_ARRAY"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "三条回传通道",
+      "items": [
+        "trace_events: ringbuf 共享缓冲区，250ms 定时轮询",
+        "report_events: perf event array，即时事件驱动唤醒",
+        "pid_events: 哈希 map 去重，批量 BatchLookupAndDelete 收割"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "类型契约",
+      "items": [
+        "cgo -godefs 从 C 头文件生成 Go 类型定义",
+        "unsafe.Pointer 零拷贝解析，直接从原生内存布局读取事件"
+      ]
+    }
+  ]
+}

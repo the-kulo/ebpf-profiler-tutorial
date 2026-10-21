@@ -1,0 +1,66 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "eBPF 尾调用与协作栈回溯流程",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "output": ".archify/flowcharts-20260114-140000/05-尾调用与协作.html"
+  },
+  "lanes": [
+    { "id": "irq", "label": "中断上下文" },
+    { "id": "dispatch", "label": "尾调用调度" },
+    { "id": "unwind", "label": "栈展开器" },
+    { "id": "compile", "label": "编译加载", "variant": "exception" }
+  ],
+  "phases": [
+    { "id": "p_arrive", "label": "中断与初始化", "fromCol": 0, "toCol": 0 },
+    { "id": "p_dispatch", "label": "分派与展开循环", "fromCol": 1, "toCol": 2 },
+    { "id": "p_handoff", "label": "调度与终止", "fromCol": 3, "toCol": 3 }
+  ],
+  "groups": [
+    { "id": "g_unwind_loop", "label": "循环 for 5 帧", "lane": "unwind", "fromCol": 2, "toCol": 2, "variant": "emphasis" },
+    { "id": "g_compile", "label": "MULTI_USE_FUNC 展开", "lane": "compile", "fromCol": 0, "toCol": 0, "variant": "dashed" }
+  ],
+  "mainPath": ["perf_nmi", "collect", "tail_call", "prog_array", "unwinder", "push_frame", "unwind_frame", "next_unwinder", "tail_guard", "tail_handoff", "stop"],
+  "nodes": [
+    { "id": "perf_nmi", "lane": "irq", "col": 0, "type": "external", "label": "perf NMI 中断", "width": 135 },
+    { "id": "collect", "lane": "irq", "col": 0, "type": "backend", "label": "collect_trace", "sublabel": "清空 PerCPURecord", "width": 135, "yOffset": 88 },
+
+    { "id": "tail_call", "lane": "dispatch", "col": 1, "type": "messagebus", "label": "第一棒 tail_call", "width": 135 },
+    { "id": "prog_array", "lane": "dispatch", "col": 1, "type": "database", "label": "PROG_ARRAY 分派表", "sublabel": "0=stop 1=native…", "width": 142, "yOffset": 90 },
+    { "id": "tail_guard", "lane": "dispatch", "col": 3, "type": "security", "label": "尾调用限幅保护", "sublabel": "tailCalls ≥ 29 强制改投", "width": 155 },
+    { "id": "tail_handoff", "lane": "dispatch", "col": 3, "type": "messagebus", "label": "尾调用交棒", "sublabel": "tail_call 跳到下一站", "width": 142, "yOffset": 110 },
+    { "id": "stop", "lane": "dispatch", "col": 3, "type": "security", "label": "unwind_stop", "sublabel": "终止并上报", "width": 135, "yOffset": 210 },
+
+    { "id": "unwinder", "lane": "unwind", "col": 2, "type": "backend", "label": "unwinder 主循环", "sublabel": "for 0..4 定点数循环", "width": 150 },
+    { "id": "push_frame", "lane": "unwind", "col": 2, "type": "backend", "label": "push_native", "sublabel": "入帧到栈记录", "width": 135, "yOffset": 90 },
+    { "id": "unwind_frame", "lane": "unwind", "col": 2, "type": "backend", "label": "unwind_one_frame", "sublabel": "解一帧栈地址", "width": 142, "yOffset": 172 },
+    { "id": "next_unwinder", "lane": "unwind", "col": 3, "type": "backend", "label": "get_next_unwinder", "sublabel": "调度下一站\n归自己则继续，否则 break", "width": 152 },
+    { "id": "done_bitmap", "lane": "unwind", "col": 2, "type": "database", "label": "unwindersDone 位图", "sublabel": "跳过已完工 unwinder", "width": 148, "yOffset": 258 },
+
+    { "id": "multi_func", "lane": "compile", "col": 0, "type": "cloud", "label": "MULTI_USE_FUNC", "sublabel": "一套代码展开两种 SEC", "width": 142, "yOffset": 188 },
+    { "id": "perf_prog", "lane": "compile", "col": 0, "type": "backend", "label": "perf_event 程序", "sublabel": "配 perf PROG_ARRAY", "width": 140, "yOffset": 278 },
+    { "id": "kprobe_prog", "lane": "compile", "col": 0, "type": "backend", "label": "kprobe 程序", "sublabel": "配 kprobe PROG_ARRAY", "width": 142, "yOffset": 365 },
+    { "id": "kp_map", "lane": "compile", "col": 1, "type": "database", "label": "per_cpu_records_kp", "sublabel": "指令重写引用独立 map", "width": 158, "yOffset": 88 }
+  ],
+  "edges": [
+    { "id": "e_perf_collect", "from": "perf_nmi", "to": "collect", "variant": "default", "role": "main" },
+    { "id": "e_collect_tailcall", "from": "collect", "to": "tail_call", "variant": "emphasis", "role": "main" },
+    { "id": "e_tailcall_progarray", "from": "tail_call", "to": "prog_array", "variant": "default", "role": "main", "label": "查表" },
+    { "id": "e_dispatch_unwinder", "from": "prog_array", "to": "unwinder", "variant": "emphasis", "role": "main", "label": "分派" },
+    { "id": "e_loop_push", "from": "unwinder", "to": "push_frame", "variant": "default", "role": "main" },
+    { "id": "e_push_unwind", "from": "push_frame", "to": "unwind_frame", "variant": "default", "role": "main" },
+    { "id": "e_unwind_next", "from": "unwind_frame", "to": "next_unwinder", "variant": "default", "role": "main" },
+    { "id": "e_next_guard", "from": "next_unwinder", "to": "tail_guard", "variant": "emphasis", "role": "main", "label": "需交棒" },
+    { "id": "e_guard_handoff", "from": "tail_guard", "to": "tail_handoff", "variant": "security", "role": "main", "label": "tailCalls<29" },
+    { "id": "e_handoff_loop", "from": "tail_handoff", "to": "tail_call", "variant": "dashed", "role": "return", "label": "循环" },
+    { "id": "e_next_continue", "from": "next_unwinder", "to": "unwinder", "variant": "dashed", "role": "return", "label": "继续" },
+    { "id": "e_bitmap_read", "from": "done_bitmap", "to": "next_unwinder", "variant": "dashed", "role": "branch", "label": "查询位图" },
+    { "id": "e_guard_forced", "from": "tail_guard", "to": "stop", "variant": "security", "role": "error", "label": "tailCalls ≥ 29" },
+    { "id": "e_handoff_done", "from": "tail_handoff", "to": "stop", "variant": "dashed", "role": "branch", "label": "全部完工" },
+    { "id": "e_macro_perf", "from": "multi_func", "to": "perf_prog", "variant": "dashed", "label": "展开 SEC" },
+    { "id": "e_macro_kprobe", "from": "multi_func", "to": "kprobe_prog", "variant": "dashed", "label": "展开 SEC" },
+    { "id": "e_kprobe_map", "from": "kprobe_prog", "to": "kp_map", "variant": "security", "label": "指令重写" }
+  ]
+}

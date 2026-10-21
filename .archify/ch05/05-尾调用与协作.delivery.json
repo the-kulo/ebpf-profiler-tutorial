@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "4dcd8467-66b8-401e-acbd-61b9ade12607",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "C:\\Users\\gly\\Desktop\\think\\ebpf-profiler-tutorial\\.archify\\flowcharts-20260114-140000\\candidate-05.json",
+  "output": "C:\\Users\\gly\\Desktop\\think\\ebpf-profiler-tutorial\\.archify\\flowcharts-20260114-140000\\05-尾调用与协作.html",
+  "specification": {
+    "sha256": "abc2c1e2efaa2b169def93788b832e91df71500edfa3c2aec205dc9694c7738d",
+    "bytes": 6013
+  },
+  "artifact": {
+    "sha256": "0a5a39695446e8df270c7ddecf8879d9e1d9f8819c84ece38489c46e23f74e70",
+    "bytes": 774901
+  }
+}

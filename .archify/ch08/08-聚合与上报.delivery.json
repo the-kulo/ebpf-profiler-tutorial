@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "8e5400ec-fed1-480e-9869-25a99f9d64d8",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "C:\\Users\\gly\\Desktop\\think\\ebpf-profiler-tutorial\\.archify\\flowcharts-20260114-140000\\candidate-08.json",
+  "output": "C:\\Users\\gly\\Desktop\\think\\ebpf-profiler-tutorial\\.archify\\flowcharts-20260114-140000\\08-聚合与上报.html",
+  "specification": {
+    "sha256": "9b478847ccf79fdaf81d305145230250c6234e54f42cf83183c9df5af236ae21",
+    "bytes": 4606
+  },
+  "artifact": {
+    "sha256": "add57717134c7246a35b4b56882c5daf44cd3704f0732361a180828725fe5441",
+    "bytes": 765578
+  }
+}

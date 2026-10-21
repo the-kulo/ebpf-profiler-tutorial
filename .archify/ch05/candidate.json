@@ -1,0 +1,300 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "第 05 篇 · 尾调用与多程序协作的组件全景",
+    "locale": "zh-CN",
+    "output": ".archify/ch05/ch05.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/open-telemetry/opentelemetry-ebpf-profiler",
+      "revision": "3792d76dba7b856617d0c37135b2f9af2aa660cf",
+      "link_mode": "local-only"
+    }
+  },
+  "components": [
+    {
+      "id": "perfev",
+      "type": "cloud",
+      "label": "perf event × CPU",
+      "sublabel": "cpu-clock · 采样中断入口",
+      "pos": [30, 60],
+      "size": [240, 64],
+      "sources": [
+        { "path": "tracer/tracer.go", "line": 1254 }
+      ]
+    },
+    {
+      "id": "collect",
+      "type": "backend",
+      "label": "collect_trace",
+      "sublabel": "清空 PerCPURecord · 取寄存器 · 第一棒",
+      "pos": [30, 200],
+      "size": [260, 72],
+      "sources": [
+        { "path": "support/ebpf/tracemgmt.h", "line": 1186 }
+      ]
+    },
+    {
+      "id": "per_cpu_record",
+      "type": "database",
+      "label": "PerCPURecord",
+      "sublabel": "续体：trace + UnwindState + 书签 + 位图 + 燃料",
+      "pos": [30, 400],
+      "size": [290, 88],
+      "sources": [
+        { "path": "support/ebpf/types.h", "line": 922 },
+        { "path": "support/ebpf/types.h", "line": 977 }
+      ]
+    },
+    {
+      "id": "unwinders_done",
+      "type": "backend",
+      "label": "unwindersDone 位图",
+      "sublabel": "unwinder_is_done / unwinder_mark_done · 防乒乓",
+      "pos": [30, 600],
+      "size": [280, 72],
+      "sources": [
+        { "path": "support/ebpf/tracemgmt.h", "line": 540 }
+      ]
+    },
+    {
+      "id": "next_unwinder",
+      "type": "backend",
+      "label": "get_next_unwinder",
+      "sublabel": "resolution → interpreter_offsets → 检查位图",
+      "pos": [30, 760],
+      "size": [280, 72],
+      "sources": [
+        { "path": "support/ebpf/tracemgmt.h", "line": 972 },
+        { "path": "support/ebpf/tracemgmt.h", "line": 950 }
+      ]
+    },
+    {
+      "id": "prog_array",
+      "type": "database",
+      "label": "perf_progs (PROG_ARRAY 分派表)",
+      "sublabel": "0=STOP 1=NATIVE … 12=LUAJIT · 13 个槽位",
+      "pos": [500, 60],
+      "size": [300, 72],
+      "sources": [
+        { "path": "support/ebpf/interpreter_dispatcher.ebpf.c", "line": 41 },
+        { "path": "support/ebpf/types.h", "line": 396 }
+      ]
+    },
+    {
+      "id": "tail_wrapper",
+      "type": "security",
+      "label": "tail_call 包装函数",
+      "sublabel": "tailCalls ≥ 29 → 强制改投 STOP · 燃料表",
+      "pos": [900, 60],
+      "size": [270, 72],
+      "sources": [
+        { "path": "support/ebpf/tracemgmt.h", "line": 1008 }
+      ]
+    },
+    {
+      "id": "native_unwind",
+      "type": "backend",
+      "label": "unwind_native",
+      "sublabel": "每趟解 ≤5 帧 · NATIVE_FRAMES_PER_PROGRAM",
+      "pos": [900, 200],
+      "size": [280, 72],
+      "sources": [
+        { "path": "support/ebpf/native_stack_trace.ebpf.c", "line": 144 },
+        { "path": "support/ebpf/native_stack_trace.h", "line": 14 }
+      ]
+    },
+    {
+      "id": "interp_unwinders",
+      "type": "backend",
+      "label": "各解释器 unwinder",
+      "sublabel": "HotSpot≤4 · Python≤10 · Perl≤12 · V8≤8 …",
+      "pos": [900, 380],
+      "size": [280, 88],
+      "sources": [
+        { "path": "support/ebpf/hotspot_tracer.ebpf.c", "line": 72 },
+        { "path": "support/ebpf/python_tracer.ebpf.c", "line": 14 },
+        { "path": "support/ebpf/perl_tracer.ebpf.c", "line": 37 }
+      ]
+    },
+    {
+      "id": "stop_prog",
+      "type": "security",
+      "label": "unwind_stop",
+      "sublabel": "send_trace → ring buffer · 终点站",
+      "pos": [900, 600],
+      "size": [260, 72],
+      "sources": [
+        { "path": "support/ebpf/tracemgmt.h", "line": 748 }
+      ]
+    },
+    {
+      "id": "multi_func",
+      "type": "cloud",
+      "label": "MULTI_USE_FUNC 宏",
+      "sublabel": "perf_event + kprobe 双份编译",
+      "pos": [500, 760],
+      "size": [260, 72],
+      "sources": [
+        { "path": "support/ebpf/tracemgmt.h", "line": 20 }
+      ]
+    },
+    {
+      "id": "kp_map",
+      "type": "database",
+      "label": "per_cpu_records_kp",
+      "sublabel": "probe 系独立储物柜 · 指令重写换柜",
+      "pos": [900, 760],
+      "size": [280, 72],
+      "sources": [
+        { "path": "support/ebpf/interpreter_dispatcher.ebpf.c", "line": 22 },
+        { "path": "tracer/tracer.go", "line": 911 }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "perf-collect",
+      "from": "perfev",
+      "to": "collect",
+      "label": "中断触发"
+    },
+    {
+      "id": "collect-first",
+      "from": "collect",
+      "to": "prog_array",
+      "label": "第一棒 tail_call",
+      "variant": "emphasis"
+    },
+    {
+      "id": "collect-record",
+      "from": "collect",
+      "to": "per_cpu_record",
+      "label": "get_pristine 清零"
+    },
+    {
+      "id": "pa-dispatch",
+      "from": "prog_array",
+      "to": "native_unwind",
+      "label": "分派到 native"
+    },
+    {
+      "id": "pa-interp",
+      "from": "prog_array",
+      "to": "interp_unwinders",
+      "label": "分派到解释器",
+      "variant": "dashed"
+    },
+    {
+      "id": "native-tail",
+      "from": "native_unwind",
+      "to": "tail_wrapper",
+      "label": "tail_call(ctx, next)"
+    },
+    {
+      "id": "interp-tail",
+      "from": "interp_unwinders",
+      "to": "tail_wrapper",
+      "label": "tail_call(ctx, next)"
+    },
+    {
+      "id": "tail-array",
+      "from": "tail_wrapper",
+      "to": "prog_array",
+      "label": "tailCalls < 29 继续",
+      "variant": "emphasis"
+    },
+    {
+      "id": "tail-stop",
+      "from": "tail_wrapper",
+      "to": "stop_prog",
+      "label": "tailCalls ≥ 29 或解完"
+    },
+    {
+      "id": "record-nat",
+      "from": "per_cpu_record",
+      "to": "native_unwind",
+      "label": "读写 state / trace / tailCalls",
+      "variant": "dashed"
+    },
+    {
+      "id": "record-interp",
+      "from": "per_cpu_record",
+      "to": "interp_unwinders",
+      "label": "读写书签 scratch",
+      "variant": "dashed"
+    },
+    {
+      "id": "done-check",
+      "from": "unwinders_done",
+      "to": "next_unwinder",
+      "label": "unwinder_is_done 查询"
+    },
+    {
+      "id": "next-pa",
+      "from": "next_unwinder",
+      "to": "prog_array",
+      "label": "返回分派索引",
+      "variant": "dashed"
+    },
+    {
+      "id": "record-next",
+      "from": "per_cpu_record",
+      "to": "next_unwinder",
+      "label": "读写 unwindersDone 位图",
+      "variant": "dashed"
+    },
+    {
+      "id": "multi-kp",
+      "from": "multi_func",
+      "to": "kp_map",
+      "label": "Go 加载时指令重写"
+    },
+    {
+      "id": "multi-array",
+      "from": "multi_func",
+      "to": "prog_array",
+      "label": "展开为 perf_ + kprobe_ 双份",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "尺寸墙：为什么不能一个程序解完",
+      "items": [
+        "verifier 禁止无界循环 · 指令预算限制（老内核 4096，5.2+ 放宽但分支爆炸）",
+        "每程序解固定帧数：native 5、HotSpot 4、Python 10（6.6+ 可 15）、Perl 12",
+        "数字全是「调到 verifier 能接受为止」——Python 注释：10 是 5.x~6.5 上限"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "燃料表：tail_call 包装函数的 29 次自限",
+      "items": [
+        "内核尾调用链上限 32 次 · 留 3 次余量：1 次交 STOP + 1 次 Go Labels + 1 次安全边际",
+        "tailCalls ≥ 29 → 强制改投 PROG_UNWIND_STOP · 记 ERR_MAX_TAIL_CALLS",
+        "宁可少解几帧，绝不冒「解完却送不出去」的险"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Cross-CPU 隔离：双柜设计",
+      "items": [
+        "MULTI_USE_FUNC 把同一函数编译为 perf_event + kprobe 两份独立程序",
+        "per_cpu_records（perf 用）+ per_cpu_records_kp（probe 用）两个储物柜",
+        "Go 加载时 AssociateMap 重写 probe 版的 map 引用，防止 perf 中断踩坏 kprobe 续体"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "接力赛心智模型",
+      "items": [
+        "perf_progs = 电话簿，TracePrograms 枚举 = 选手编号，PerCPURecord = 接力棒",
+        "unwindersDone 位图 = 选手签名板——盖过章的跳过，防 native↔解释器乒乓死循环",
+        "32KB _Static_assert 守住续体大小 · scratch union 绕开 512 字节栈"
+      ]
+    }
+  ]
+}

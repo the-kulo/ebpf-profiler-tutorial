@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "6fd4dbce-92ec-451c-a124-5f21b5df11ee",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "C:\\Users\\gly\\Desktop\\think\\ebpf-profiler-tutorial\\.archify\\flowcharts-20260114-140000\\candidate-01.json",
+  "output": "C:\\Users\\gly\\Desktop\\think\\ebpf-profiler-tutorial\\.archify\\flowcharts-20260114-140000\\01-sampling-pipeline.html",
+  "specification": {
+    "sha256": "1d9e292464fc3781f52db2ca0fb7010fa6b5a28977bb9b7bb79e3153c9f83b39",
+    "bytes": 4823
+  },
+  "artifact": {
+    "sha256": "13d11db47af6efad756f0eb8efdb77a44f7a166d76246051f97851aa6e576f73",
+    "bytes": 768764
+  }
+}

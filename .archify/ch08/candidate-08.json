@@ -1,0 +1,63 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "08 聚合与上报",
+    "subtitle": "三层Key聚合 → 定时Swap-Clear → pdata生成 → OTLP/Collector上报",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "output": "flowcharts-20260114-140000/08-聚合与上报.html"
+  },
+  "lanes": [
+    { "id": "profiler", "label": "采集端" },
+    { "id": "aggregator", "label": "聚合层" },
+    { "id": "generator", "label": "生成层" },
+    { "id": "reporter", "label": "上报层" }
+  ],
+  "phases": [
+    { "id": "ph_enqueue", "label": "入队与哈希", "fromCol": 0, "toCol": 1 },
+    { "id": "ph_aggregate", "label": "三层聚合", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "ph_flush", "label": "定时刷写", "fromCol": 4, "toCol": 4 },
+    { "id": "ph_report", "label": "生成与上报", "fromCol": 5, "toCol": 5, "variant": "dashed" }
+  ],
+  "groups": [
+    { "id": "grp_keys", "label": "三层Key逐级匹配", "lane": "aggregator", "fromCol": 2, "toCol": 2, "variant": "emphasis" }
+  ],
+  "mainPath": ["event", "tracehash", "reskey", "typemeta", "samplekey", "hit", "runloop", "generate", "otlp", "otlprep"],
+  "nodes": [
+    { "id": "event", "lane": "profiler", "col": 0, "type": "backend", "label": "ReportTraceEvent", "sublabel": "采样事件入队", "width": 155 },
+
+    { "id": "tracehash", "lane": "aggregator", "col": 1, "type": "security", "label": "TraceHash指纹", "sublabel": "xxh3-128每帧序列哈希", "width": 165 },
+
+    { "id": "reskey", "lane": "aggregator", "col": 2, "type": "database", "label": "ResourceKey", "sublabel": "容器/进程标识", "width": 148, "yOffset": -100 },
+    { "id": "typemeta", "lane": "aggregator", "col": 2, "type": "database", "label": "TypeMetadata", "sublabel": "on-CPU / off-CPU", "width": 155, "yOffset": 0 },
+    { "id": "samplekey", "lane": "aggregator", "col": 2, "type": "database", "label": "SampleKey", "sublabel": "Hash+线程/TID/CPU", "width": 160, "yOffset": 100 },
+
+    { "id": "hit", "lane": "aggregator", "col": 3, "type": "backend", "label": "命中已有Key", "sublabel": "仅追加Timestamps", "width": 150, "yOffset": 55 },
+    { "id": "miss", "lane": "aggregator", "col": 3, "type": "backend", "label": "未命中Key", "sublabel": "复制Frames新建Entry", "width": 160, "yOffset": -55 },
+
+    { "id": "runloop", "lane": "aggregator", "col": 4, "type": "messagebus", "label": "runLoop Tick", "sublabel": "每5秒 ±20% jitter", "width": 160 },
+
+    { "id": "generate", "lane": "generator", "col": 5, "type": "backend", "label": "pdata.Generate", "sublabel": "Dictionary六类表去重", "width": 165, "yOffset": -55 },
+    { "id": "otlp", "lane": "generator", "col": 5, "type": "cloud", "label": "OTLP Payload", "sublabel": "标准Profiles格式", "width": 150, "yOffset": 55 },
+
+    { "id": "connect", "lane": "reporter", "col": 4, "type": "security", "label": "waitGrpcEndpoint", "sublabel": "启动阻塞建连 backoff×5", "width": 170 },
+    { "id": "otlprep", "lane": "reporter", "col": 5, "type": "cloud", "label": "OTLPReporter", "sublabel": "gzip压缩 + 5秒超时", "width": 160, "yOffset": -55 },
+    { "id": "collector", "lane": "reporter", "col": 5, "type": "external", "label": "CollectorReporter", "sublabel": "内嵌函数调用 pipeline", "width": 165, "yOffset": 55 }
+  ],
+  "edges": [
+    { "id": "e1", "from": "event", "to": "tracehash", "variant": "default" },
+    { "id": "e2", "from": "tracehash", "to": "reskey", "variant": "default" },
+    { "id": "e3", "from": "reskey", "to": "typemeta", "variant": "default" },
+    { "id": "e4", "from": "typemeta", "to": "samplekey", "variant": "default" },
+    { "id": "e5", "from": "samplekey", "to": "hit", "label": "命中", "variant": "emphasis" },
+    { "id": "e6", "from": "samplekey", "to": "miss", "label": "未命中", "variant": "dashed", "role": "branch" },
+    { "id": "e7", "from": "hit", "to": "runloop", "variant": "default" },
+    { "id": "e8", "from": "miss", "to": "runloop", "variant": "dashed", "role": "return" },
+    { "id": "e9", "from": "runloop", "to": "generate", "label": "swap-clear换出旧树", "variant": "emphasis", "role": "main" },
+    { "id": "e10", "from": "generate", "to": "otlp", "variant": "default" },
+    { "id": "e11", "from": "otlp", "to": "otlprep", "variant": "emphasis", "role": "main" },
+    { "id": "e12", "from": "otlp", "to": "collector", "label": "内嵌模式", "variant": "dashed", "role": "branch" },
+    { "id": "e13", "from": "connect", "to": "otlprep", "label": "建连成功", "variant": "security", "role": "async" }
+  ]
+}

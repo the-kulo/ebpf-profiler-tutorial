@@ -1,0 +1,256 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "第 03 篇 · 帧指针回溯的组件全景",
+    "locale": "zh-CN",
+    "output": ".archify/ch03/ch03.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/open-telemetry/opentelemetry-ebpf-profiler",
+      "revision": "3792d76dba7b856617d0c37135b2f9af2aa660cf",
+      "link_mode": "local-only"
+    }
+  },
+  "components": [
+    {
+      "id": "perfev",
+      "type": "cloud",
+      "label": "perf event × CPU",
+      "sublabel": "cpu-clock · 20Hz · 采样中断",
+      "pos": [30, 60],
+      "size": [240, 64],
+      "sources": [
+        { "path": "tracer/tracer.go", "line": 1254 }
+      ]
+    },
+    {
+      "id": "entry",
+      "type": "backend",
+      "label": "native_tracer_entry + copy_state_regs",
+      "sublabel": "从 pt_regs 搬 pc/sp/fp 进 UnwindState",
+      "pos": [30, 220],
+      "size": [280, 72],
+      "sources": [
+        { "path": "support/ebpf/tracemgmt.h", "line": 1052 }
+      ]
+    },
+    {
+      "id": "dispatch",
+      "type": "backend",
+      "label": "unwind_one_frame",
+      "sublabel": "查 stack delta 表 → 命令分发",
+      "pos": [400, 220],
+      "size": [260, 72],
+      "sources": [
+        { "path": "support/ebpf/native_stack_trace.h", "line": 299 }
+      ]
+    },
+    {
+      "id": "delta_table",
+      "type": "database",
+      "label": "stack delta 表",
+      "sublabel": "Go 预填 UNWIND_COMMAND_FP 命令",
+      "pos": [780, 220],
+      "size": [260, 64],
+      "sources": [
+        { "path": "support/ebpf/types.h", "line": 1058 }
+      ]
+    },
+    {
+      "id": "fp_unwind",
+      "type": "backend",
+      "label": "unwinder_unwind_frame_pointer",
+      "sublabel": "bpf_probe_read_user 读 16 字节",
+      "pos": [400, 380],
+      "size": [270, 72],
+      "sources": [
+        { "path": "support/ebpf/tracemgmt.h", "line": 621 }
+      ]
+    },
+    {
+      "id": "fp_regs",
+      "type": "backend",
+      "label": "unwinder_unwind_frame_pointer_regs",
+      "sublabel": "sp = fp + 16 · fp = regs[0] · pc = regs[1]",
+      "pos": [780, 380],
+      "size": [280, 72],
+      "sources": [
+        { "path": "support/ebpf/tracemgmt.h", "line": 598 }
+      ]
+    },
+    {
+      "id": "mark_ret",
+      "type": "backend",
+      "label": "unwinder_mark_nonleaf_frame",
+      "sublabel": "置 return_address = true",
+      "pos": [30, 540],
+      "size": [270, 64],
+      "sources": [
+        { "path": "support/ebpf/tracemgmt.h", "line": 553 }
+      ]
+    },
+    {
+      "id": "push_frame",
+      "type": "backend",
+      "label": "push_native",
+      "sublabel": "帧头打入 FRAME_FLAG_RETURN_ADDRESS",
+      "pos": [450, 540],
+      "size": [270, 72],
+      "sources": [
+        { "path": "support/ebpf/tracemgmt.h", "line": 691 },
+        { "path": "support/ebpf/frametypes.h", "line": 43 }
+      ]
+    },
+    {
+      "id": "go_symbolize",
+      "type": "backend",
+      "label": "Go 符号化 address--",
+      "sublabel": "processmanager/manager.go:319 · 减 1 修正",
+      "pos": [400, 690],
+      "size": [280, 72],
+      "sources": [
+        { "path": "processmanager/manager.go", "line": 319 }
+      ]
+    },
+    {
+      "id": "go_delta_lookup",
+      "type": "backend",
+      "label": "get_stack_delta 查表前减 1",
+      "sublabel": "native_stack_trace.h:64 · 拉回 call 势力范围",
+      "pos": [780, 540],
+      "size": [280, 72],
+      "sources": [
+        { "path": "support/ebpf/native_stack_trace.h", "line": 64 }
+      ]
+    },
+    {
+      "id": "unwind_state",
+      "type": "database",
+      "label": "UnwindState",
+      "sublabel": "pc / sp / fp / return_address · union 收编寄存器",
+      "pos": [30, 380],
+      "size": [260, 72],
+      "sources": [
+        { "path": "support/ebpf/types.h", "line": 736 },
+        { "path": "support/ebpf/types.h", "line": 770 }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "pe-entry",
+      "from": "perfev",
+      "to": "entry",
+      "label": "SetBPF 绑定"
+    },
+    {
+      "id": "entry-dispatch",
+      "from": "entry",
+      "to": "dispatch",
+      "label": "pc / sp / fp"
+    },
+    {
+      "id": "dispatch-fp",
+      "from": "dispatch",
+      "to": "fp_unwind",
+      "label": "UNWIND_COMMAND_FP",
+      "variant": "emphasis"
+    },
+    {
+      "id": "fp-fpregs",
+      "from": "fp_unwind",
+      "to": "fp_regs",
+      "label": "regs[2] 两值"
+    },
+    {
+      "id": "fpregs-mark",
+      "from": "fp_regs",
+      "to": "mark_ret",
+      "label": "新 sp / fp / pc",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "via": [[920, 452], [920, 500], [165, 500], [165, 540]]
+    },
+    {
+      "id": "mark-push",
+      "from": "mark_ret",
+      "to": "push_frame",
+      "label": "帧 + return_address 标志"
+    },
+    {
+      "id": "push-go",
+      "from": "push_frame",
+      "to": "go_symbolize",
+      "label": "ring buffer → Go",
+      "variant": "dashed"
+    },
+    {
+      "id": "delta-dispatch",
+      "from": "delta_table",
+      "to": "dispatch",
+      "label": "二分查表",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "fpregs-delta",
+      "from": "fp_regs",
+      "to": "go_delta_lookup",
+      "label": "返回地址减 1 → 查表"
+    },
+    {
+      "id": "state-entry",
+      "from": "unwind_state",
+      "to": "entry",
+      "label": "容器定义",
+      "variant": "dashed"
+    },
+    {
+      "id": "state-fpregs",
+      "from": "unwind_state",
+      "to": "fp_regs",
+      "label": "读写字段",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "三个不变量（x86-64 带帧指针时成立）",
+      "items": [
+        "*(fp) = caller 的帧指针（push %rbp 存的）",
+        "*(fp + 8) = 返回地址（call 自动压栈）",
+        "fp + 16 = 本帧 CFA = caller 的 call 前 sp"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "return_address 标志三站旅程",
+      "items": [
+        "标记：unwinder_mark_nonleaf_frame 置 state→return_address = true",
+        "携带：push_native 转成帧头 FRAME_FLAG_RETURN_ADDRESS (1<<1)",
+        "修正：Go 符号化 manager.go:319 address--；查表 native_stack_trace.h:64 offset - 1"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "FPO 现实：帧指针快车道不是默认",
+      "items": [
+        "-fomit-frame-pointer 令 rbp 变通用寄存器，生产二进制普遍没有帧指针链",
+        "本项目默认走 Stack Delta（第 04 篇），只在 Go 验证某段代码确有 FP 时才写入 UNWIND_COMMAND_FP",
+        "帧指针回溯在此是「被验证过才敢用的快车道」，而非默认路径"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "心智模型：回溯 = 反复求解 CFA 方程",
+      "items": [
+        "FP 版方程：CFA = fp + 16（tracemgmt.h:604）",
+        "下一层 sp = CFA，下一层 pc = *(CFA - 8)",
+        "无 FP 时方程推广为 CFA = reg + offset（第 04 篇 Stack Delta）"
+      ]
+    }
+  ]
+}

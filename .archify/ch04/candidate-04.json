@@ -1,0 +1,60 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "04 StackDelta 机制：从 C 源码到栈帧回溯",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "output": ".archify/flowcharts-20260114-140000/04-StackDelta机制.html"
+  },
+  "lanes": [
+    { "id": "source_compiler", "label": "源代码与编译器" },
+    { "id": "userspace_go", "label": "用户态 Go 翻译器" },
+    { "id": "ebpf_maps", "label": "eBPF Maps 存储" },
+    { "id": "kernel_ebpf", "label": "内核 eBPF 回溯器" }
+  ],
+  "phases": [
+    { "id": "p_gen", "label": "编译生成 CFI", "fromCol": 0, "toCol": 1 },
+    { "id": "p_translate", "label": "离线翻译", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "p_compress", "label": "压缩入库", "fromCol": 4, "toCol": 4, "variant": "security" },
+    { "id": "p_online", "label": "在线回溯", "fromCol": 5, "toCol": 5, "variant": "emphasis" }
+  ],
+  "mainPath": [
+    "c_src", "compiler", "eh_frame", "extract", "dwarf_vm",
+    "interval", "dedup", "merge", "page_bucket", "maps",
+    "gsd", "uof", "frame"
+  ],
+  "nodes": [
+    { "id": "c_src", "lane": "source_compiler", "col": 0, "type": "frontend", "label": "C 源码", "sublabel": "含优化编译选项", "width": 140 },
+    { "id": "compiler", "lane": "source_compiler", "col": 1, "type": "backend", "label": "编译器", "sublabel": "GCC/Clang -O2", "width": 150 },
+    { "id": "eh_frame", "lane": "source_compiler", "col": 1, "type": "database", "label": ".eh_frame", "sublabel": "CFI 字节码", "width": 150, "yOffset": 140 },
+
+    { "id": "extract", "lane": "userspace_go", "col": 1, "type": "backend", "label": "ExtractELF", "sublabel": "信息来源优先级", "width": 150 },
+    { "id": "dwarf_vm", "lane": "userspace_go", "col": 2, "type": "backend", "label": "DWARF 虚拟机", "sublabel": "elfehframe.go step()", "width": 150 },
+    { "id": "interval", "lane": "userspace_go", "col": 3, "type": "database", "label": "IntervalData", "sublabel": "地址区间 → 规则", "width": 160 },
+
+    { "id": "dedup", "lane": "userspace_go", "col": 4, "type": "backend", "label": "UnwindInfo 去重", "sublabel": "全局哈希 ≤16384 种", "width": 160, "yOffset": -110 },
+    { "id": "merge", "lane": "userspace_go", "col": 4, "type": "backend", "label": "mergeOpcode 合并", "sublabel": "相邻 ±8 字节合并", "width": 160, "yOffset": 0 },
+    { "id": "page_bucket", "lane": "userspace_go", "col": 4, "type": "backend", "label": "分页与分桶", "sublabel": "64KB 页 + 16 桶", "width": 160, "yOffset": 110 },
+
+    { "id": "maps", "lane": "ebpf_maps", "col": 4, "type": "database", "label": "eBPF Maps", "sublabel": "数组 / 页表 / 桶", "width": 160 },
+
+    { "id": "gsd", "lane": "kernel_ebpf", "col": 5, "type": "backend", "label": "get_stack_delta", "sublabel": "16 步手工二分", "width": 160, "yOffset": -110 },
+    { "id": "uof", "lane": "kernel_ebpf", "col": 5, "type": "backend", "label": "unwind_one_frame", "sublabel": "CFA 表达式 / 命令分流", "width": 160, "yOffset": 0 },
+    { "id": "frame", "lane": "kernel_ebpf", "col": 5, "type": "security", "label": "解开栈帧", "sublabel": "读 CFA-8 取返回地址", "width": 160, "yOffset": 110 }
+  ],
+  "edges": [
+    { "id": "e1", "from": "c_src", "to": "compiler", "variant": "emphasis" },
+    { "id": "e2", "from": "compiler", "to": "eh_frame", "label": "生成", "variant": "default" },
+    { "id": "e3", "from": "eh_frame", "to": "extract", "variant": "default" },
+    { "id": "e4", "from": "extract", "to": "dwarf_vm", "variant": "emphasis", "label": "解析 FDE" },
+    { "id": "e5", "from": "dwarf_vm", "to": "interval", "variant": "default" },
+    { "id": "e6", "from": "interval", "to": "dedup", "variant": "default" },
+    { "id": "e7", "from": "dedup", "to": "merge", "variant": "default" },
+    { "id": "e8", "from": "merge", "to": "page_bucket", "variant": "default" },
+    { "id": "e9", "from": "page_bucket", "to": "maps", "variant": "emphasis", "label": "写入" },
+    { "id": "e10", "from": "maps", "to": "gsd", "variant": "emphasis", "label": "查表" },
+    { "id": "e11", "from": "gsd", "to": "uof", "variant": "emphasis" },
+    { "id": "e12", "from": "uof", "to": "frame", "variant": "emphasis" }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "01 采样数据之旅: 从编译到用户态接收",
+    "locale": "zh-CN",
+    "output": ".archify/flowcharts-20260114-140000/01-sampling-pipeline.html",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    { "id": "build", "label": "编译期" },
+    { "id": "attach-lane", "label": "挂载期" },
+    { "id": "kernel", "label": "内核态 eBPF" },
+    { "id": "userspace", "label": "用户态 Go" }
+  ],
+  "phases": [
+    { "id": "p1", "label": "编译 & 嵌入", "fromCol": 0, "toCol": 0 },
+    { "id": "p2", "label": "加载 & 挂载", "fromCol": 1, "toCol": 1 },
+    { "id": "p3", "label": "触发 & 回溯", "fromCol": 2, "toCol": 2 },
+    { "id": "p4", "label": "回传 & 接收", "fromCol": 3, "toCol": 3 }
+  ],
+  "mainPath": ["c-src", "clang", "elf", "embed", "spec", "attach", "perf", "entry", "collect", "unwind", "stop", "send", "ringbuf", "monitor", "parse", "outchan"],
+  "nodes": [
+    { "id": "c-src", "lane": "build", "col": 0, "type": "frontend", "label": "*.ebpf.c", "sublabel": "内核态 C 源码", "width": 140 },
+    { "id": "clang", "lane": "build", "col": 0, "type": "backend", "label": "clang + llc", "sublabel": "编译为 BPF ELF", "width": 140, "yOffset": 80 },
+    { "id": "elf", "lane": "build", "col": 0, "type": "database", "label": "tracer.ebpf.amd64", "sublabel": "BPF 字节码全家桶", "width": 140, "yOffset": 160 },
+    { "id": "embed", "lane": "build", "col": 0, "type": "backend", "label": "go:embed", "sublabel": "嵌入 Go 二进制", "width": 140, "yOffset": 240 },
+
+    { "id": "spec", "lane": "attach-lane", "col": 1, "type": "backend", "label": "LoadCollectionSpec", "sublabel": "解析 ELF → 图纸", "width": 150 },
+    { "id": "attach", "lane": "attach-lane", "col": 1, "type": "backend", "label": "AttachTracer", "sublabel": "每 CPU 开 perf event", "width": 150, "yOffset": 80 },
+    { "id": "perf", "lane": "attach-lane", "col": 1, "type": "cloud", "label": "perf cpu-clock", "sublabel": "每 CPU 20Hz 触发", "width": 150, "yOffset": 160 },
+
+    { "id": "entry", "lane": "kernel", "col": 2, "type": "frontend", "label": "native_tracer_entry", "sublabel": "perf 中断入口 :201", "width": 155 },
+    { "id": "collect", "lane": "kernel", "col": 2, "type": "backend", "label": "collect_trace", "sublabel": "取寄存器+调度回溯", "width": 155, "yOffset": 80 },
+    { "id": "unwind", "lane": "kernel", "col": 2, "type": "backend", "label": "unwinder 接力", "sublabel": "尾调用逐步回溯栈帧", "width": 155, "yOffset": 160 },
+    { "id": "stop", "lane": "kernel", "col": 2, "type": "backend", "label": "unwind_stop", "sublabel": "收尾+send_trace", "width": 155, "yOffset": 240 },
+
+    { "id": "send", "lane": "kernel", "col": 3, "type": "backend", "label": "send_trace", "sublabel": "裁剪+写 ringbuf", "width": 155 },
+    { "id": "ringbuf", "lane": "kernel", "col": 3, "type": "messagebus", "label": "trace_events", "sublabel": "ring buffer 中转", "width": 155, "yOffset": 80 },
+
+    { "id": "monitor", "lane": "userspace", "col": 3, "type": "backend", "label": "Event Monitor", "sublabel": "每 250ms 轮询", "width": 155, "yOffset": 180 },
+    { "id": "parse", "lane": "userspace", "col": 3, "type": "backend", "label": "loadBpfTrace", "sublabel": "unsafe 零拷贝解析", "width": 155, "yOffset": 260 },
+    { "id": "outchan", "lane": "userspace", "col": 3, "type": "messagebus", "label": "traceOutChan", "sublabel": "→ 聚合上报管线", "width": 155, "yOffset": 340 }
+  ],
+  "edges": [
+    { "id": "e1", "from": "c-src", "to": "clang", "variant": "default" },
+    { "id": "e2", "from": "clang", "to": "elf", "variant": "default" },
+    { "id": "e3", "from": "elf", "to": "embed", "variant": "default" },
+    { "id": "e4", "from": "embed", "to": "spec", "variant": "emphasis" },
+    { "id": "e5", "from": "spec", "to": "attach", "variant": "default" },
+    { "id": "e6", "from": "attach", "to": "perf", "variant": "default" },
+    { "id": "e7", "from": "perf", "to": "entry", "variant": "emphasis", "label": "时钟中断" },
+    { "id": "e8", "from": "entry", "to": "collect", "variant": "default" },
+    { "id": "e9", "from": "collect", "to": "unwind", "variant": "emphasis", "label": "尾调用" },
+    { "id": "e10", "from": "unwind", "to": "stop", "variant": "default" },
+    { "id": "e11", "from": "stop", "to": "send", "variant": "default" },
+    { "id": "e12", "from": "send", "to": "ringbuf", "variant": "emphasis", "label": "bpf_ringbuf_output" },
+    { "id": "e13", "from": "ringbuf", "to": "monitor", "variant": "emphasis", "label": "每250ms轮询" },
+    { "id": "e14", "from": "monitor", "to": "parse", "variant": "default" },
+    { "id": "e15", "from": "parse", "to": "outchan", "variant": "emphasis", "label": "送入channel" }
+  ]
+}

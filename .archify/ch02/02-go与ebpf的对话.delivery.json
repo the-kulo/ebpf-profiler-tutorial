@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "b3d15d0b-0ba8-46a7-8bac-51b1dc20e295",
+  "status": "current",
+  "command": "deliver",
+  "type": "dataflow",
+  "input": "C:\\Users\\gly\\Desktop\\think\\ebpf-profiler-tutorial\\.archify\\flowcharts-20260114-140000\\candidate-02.json",
+  "output": "C:\\Users\\gly\\Desktop\\think\\ebpf-profiler-tutorial\\.archify\\flowcharts-20260114-140000\\02-Go与eBPF的对话.html",
+  "specification": {
+    "sha256": "80807feed13afbe1ddaf0b074882d93780b3499ae826d9d3883f582e935198ef",
+    "bytes": 2539
+  },
+  "artifact": {
+    "sha256": "35fbdbe26675d1f8f6200b3bc27ee35d00c84af9cf233c844aee86bf17ae1839",
+    "bytes": 750578
+  }
+}

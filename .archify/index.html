@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>eBPF Profiler 教程 · 配图索引</title>
+<style>
+  :root {
+    --bg: #0f1115; --card: #181c24; --border: #2a3040;
+    --text: #e6e9ef; --muted: #9aa3b2; --accent: #5b9dff;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f6f7f9; --card: #ffffff; --border: #dde1e8;
+      --text: #1c2330; --muted: #5c6675; --accent: #2b6fd4;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 80px;
+    background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+    line-height: 1.6;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 32px; font-size: .9rem; }
+  .ch {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px 20px; margin-bottom: 14px;
+  }
+  .ch-head { display: flex; align-items: baseline; gap: 10px; }
+  .num { color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .ch-title { font-weight: 600; }
+  .md { margin-left: auto; color: var(--muted); font-size: .78rem; white-space: nowrap; }
+  .diagrams { margin: 8px 0 0; padding: 0; list-style: none; }
+  .diagrams a {
+    display: flex; align-items: baseline; gap: 8px;
+    padding: 6px 8px 6px 28px; font-size: .9rem; margin-top: 4px;
+    text-decoration: none; color: inherit;
+    border: 1px solid transparent; border-radius: 8px;
+    transition: border-color .15s, background .15s;
+  }
+  .diagrams a:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 6%, transparent); }
+  .tag {
+    flex: none; font-size: .7rem; padding: 1px 8px; border-radius: 999px;
+    border: 1px solid var(--border); color: var(--muted);
+  }
+  .tag.arch { color: #7bc96f; border-color: #7bc96f55; }
+  .tag.flow { color: #5b9dff; border-color: #5b9dff55; }
+  .d-title { color: var(--text); }
+  .open-hint { margin-left: auto; color: var(--muted); font-size: .75rem; }
+  .note { color: var(--muted); font-size: .82rem; margin-top: 28px; }
+  code { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 1px 6px; font-size: .85em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>eBPF Profiler 教程 · 配图索引</h1>
+  <p class="sub">共 10 章 / 19 张图（每章 1 张架构全景 + 1 张流程图，第 00 章为架构全景）。点击任意条目在新页面打开。章节正文在同目录的 <code>../*.md</code>。</p>
+
+  <div class="ch">
+    <div class="ch-head"><span class="num">00</span><span class="ch-title">导读：从提交历史看项目的诞生与演进</span><span class="md">00-导读.md</span></div>
+    <ul class="diagrams">
+      <li><a href="ch00/ch00.html" target="_blank"><span class="tag arch">架构全景</span><span class="d-title">项目全景：OpenTelemetry eBPF Profiler</span><span class="open-hint">ch00.html</span></a></li>
+    </ul>
+  </div>
+
+  <div class="ch">
+    <div class="ch-head"><span class="num">01</span><span class="ch-title">eBPF 地基：第一个采样程序是如何跑起来的</span><span class="md">01-第一个采样程序.md</span></div>
+    <ul class="diagrams">
+      <li><a href="ch01/ch01.html" target="_blank"><span class="tag arch">架构全景</span><span class="d-title">第 01 篇 · 一颗采样数据的诞生</span><span class="open-hint">ch01.html</span></a></li>
+      <li><a href="ch01/01-sampling-pipeline.html" target="_blank"><span class="tag flow">流程图</span><span class="d-title">01 采样数据之旅：从编译到用户态接收</span><span class="open-hint">01-sampling-pipeline.html</span></a></li>
+    </ul>
+  </div>
+
+  <div class="ch">
+    <div class="ch-head"><span class="num">02</span><span class="ch-title">Go 与 eBPF 的对话：加载、配置与事件通道</span><span class="md">02-Go与eBPF的对话.md</span></div>
+    <ul class="diagrams">
+      <li><a href="ch02/ch02.html" target="_blank"><span class="tag arch">架构全景</span><span class="d-title">第 02 篇 · Go 与 eBPF 的对话</span><span class="open-hint">ch02.html</span></a></li>
+      <li><a href="ch02/02-Go与eBPF的对话.html" target="_blank"><span class="tag flow">数据流</span><span class="d-title">Go与eBPF的对话：加载、配置与事件通道</span><span class="open-hint">02-Go与eBPF的对话.html</span></a></li>
+    </ul>
+  </div>
+
+  <div class="ch">
+    <div class="ch-head"><span class="num">03</span><span class="ch-title">栈回溯入门</span><span class="md">03-栈回溯入门.md</span></div>
+    <ul class="diagrams">
+      <li><a href="ch03/ch03.html" target="_blank"><span class="tag arch">架构全景</span><span class="d-title">第 03 篇 · 帧指针回溯的组件全景</span><span class="open-hint">ch03.html</span></a></li>
+      <li><a href="ch03/03-栈回溯入门.html" target="_blank"><span class="tag flow">流程图</span><span class="d-title">eBPF 栈回溯 — FRAME_POINTER 展开流程</span><span class="open-hint">03-栈回溯入门.html</span></a></li>
+    </ul>
+  </div>
+
+  <div class="ch">
+    <div class="ch-head"><span class="num">04</span><span class="ch-title">StackDelta 机制</span><span class="md">04-StackDelta机制.md</span></div>
+    <ul class="diagrams">
+      <li><a href="ch04/ch04.html" target="_blank"><span class="tag arch">架构全景</span><span class="d-title">第 04 篇 · Stack Delta 机制的组件全景</span><span class="open-hint">ch04.html</span></a></li>
+      <li><a href="ch04/04-StackDelta机制.html" target="_blank"><span class="tag flow">流程图</span><span class="d-title">StackDelta 机制：从 C 源码到栈帧回溯</span><span class="open-hint">04-StackDelta机制.html</span></a></li>
+    </ul>
+  </div>
+
+  <div class="ch">
+    <div class="ch-head"><span class="num">05</span><span class="ch-title">尾调用与协作</span><span class="md">05-尾调用与协作.md</span></div>
+    <ul class="diagrams">
+      <li><a href="ch05/ch05.html" target="_blank"><span class="tag arch">架构全景</span><span class="d-title">第 05 篇 · 尾调用与多程序协作的组件全景</span><span class="open-hint">ch05.html</span></a></li>
+      <li><a href="ch05/05-尾调用与协作.html" target="_blank"><span class="tag flow">流程图</span><span class="d-title">eBPF 尾调用与协作栈回溯流程</span><span class="open-hint">05-尾调用与协作.html</span></a></li>
+    </ul>
+  </div>
+
+  <div class="ch">
+    <div class="ch-head"><span class="num">06</span><span class="ch-title">混合栈穿透</span><span class="md">06-混合栈穿透.md</span></div>
+    <ul class="diagrams">
+      <li><a href="ch06/ch06.html" target="_blank"><span class="tag arch">架构全景</span><span class="d-title">第 06 篇 · 混合栈穿透：LPM 调度与多世界回溯</span><span class="open-hint">ch06.html</span></a></li>
+      <li><a href="ch06/06-混合栈穿透.html" target="_blank"><span class="tag flow">流程图</span><span class="d-title">混合栈穿透：一条 trace 穿越四个世界</span><span class="open-hint">06-混合栈穿透.html</span></a></li>
+    </ul>
+  </div>
+
+  <div class="ch">
+    <div class="ch-head"><span class="num">07</span><span class="ch-title">进程管理</span><span class="md">07-进程管理.md</span></div>
+    <ul class="diagrams">
+      <li><a href="ch07/ch07.html" target="_blank"><span class="tag arch">架构全景</span><span class="d-title">第 07 篇 · 进程管理：懒发现、双通道与知识下发</span><span class="open-hint">ch07.html</span></a></li>
+      <li><a href="ch07/07-进程管理.html" target="_blank"><span class="tag flow">流程图</span><span class="d-title">eBPF Profiler 进程管理 — 懒发现与同步</span><span class="open-hint">07-进程管理.html</span></a></li>
+    </ul>
+  </div>
+
+  <div class="ch">
+    <div class="ch-head"><span class="num">08</span><span class="ch-title">聚合与上报</span><span class="md">08-聚合与上报.md</span></div>
+    <ul class="diagrams">
+      <li><a href="ch08/ch08.html" target="_blank"><span class="tag arch">架构全景</span><span class="d-title">第 08 篇 · 聚合与上报：从采样到 OTLP gRPC 推送</span><span class="open-hint">ch08.html</span></a></li>
+      <li><a href="ch08/08-聚合与上报.html" target="_blank"><span class="tag flow">流程图</span><span class="d-title">聚合与上报</span><span class="open-hint">08-聚合与上报.html</span></a></li>
+    </ul>
+  </div>
+
+  <div class="ch">
+    <div class="ch-head"><span class="num">09</span><span class="ch-title">演进史专题</span><span class="md">09-演进史专题.md</span></div>
+    <ul class="diagrams">
+      <li><a href="ch09/ch09.html" target="_blank"><span class="tag arch">架构全景</span><span class="d-title">第 09 篇 · 演进史：跟随提交历史看新能力如何落地</span><span class="open-hint">ch09.html</span></a></li>
+      <li><a href="ch09/09-演进史专题.html" target="_blank"><span class="tag flow">流程图</span><span class="d-title">eBPF Profiler 演进史</span><span class="open-hint">09-演进史专题.html</span></a></li>
+    </ul>
+  </div>
+
+  <p class="note">
+    说明：每张图均可独立打开（单文件 HTML，内联 SVG，支持深色/浅色主题与导出）。<br>
+    每章目录下的 <code>candidate.json</code>（架构全景源定义）、<code>candidate-0N.json</code>（流程图源定义）及各类 <code>*.json</code> 凭证是 archify 的生成与校验记录，不影响查看；废弃凭证在 <code>_superseded/</code>。
+  </p>
+</div>
+</body>
+</html>

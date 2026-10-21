@@ -1,0 +1,49 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "eBPF Profiler 演进史",
+    "subtitle": "跟随提交历史看新能力如何落地",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "output": ".archify/flowcharts-20260114-140000/09-演进史专题.html"
+  },
+  "lanes": [
+    { "id": "evolution", "label": "项目演进" },
+    { "id": "engineering", "label": "工程模式" }
+  ],
+  "phases": [
+    { "id": "early", "label": "初期", "fromCol": 0, "toCol": 1, "variant": "emphasis" },
+    { "id": "growth", "label": "生长", "fromCol": 2, "toCol": 3, "variant": "default" },
+    { "id": "mature", "label": "成熟", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "mainPath": [
+    "initial_import",
+    "dotnet_unwinder",
+    "collector_receiver",
+    "uprobes",
+    "beam_plumbing",
+    "dotnet9",
+    "probes_framework",
+    "mem_profiling"
+  ],
+  "nodes": [
+    { "id": "initial_import",   "lane": "evolution",   "col": 0, "type": "database", "label": "初始导入", "sublabel": "ff5b644 445文件 67602行", "width": 160 },
+    { "id": "dotnet_unwinder",  "lane": "evolution",   "col": 1, "type": "backend",  "label": ".NET Unwinder", "sublabel": "3c6d811 首个语言支持", "width": 160 },
+    { "id": "collector_receiver","lane": "engineering", "col": 1, "type": "backend",  "label": "Collector 形态", "sublabel": "9c4b3f2 receiver 模式", "width": 160 },
+    { "id": "uprobes",         "lane": "evolution",   "col": 2, "type": "backend",  "label": "Uprobes 起步", "sublabel": "fa0cef5 用户态探针", "width": 150 },
+    { "id": "beam_plumbing",   "lane": "evolution",   "col": 3, "type": "backend",  "label": "BEAM 管道", "sublabel": "77e078d no-op 占位", "width": 150 },
+    { "id": "dotnet9",         "lane": "evolution",   "col": 4, "type": "backend",  "label": ".NET 9/10 跟进", "sublabel": "ab2320f 版本适配", "width": 150 },
+    { "id": "probes_framework","lane": "engineering", "col": 4, "type": "backend",  "label": "Probes 框架化", "sublabel": "bad4ab1 统一探针接口", "width": 160 },
+    { "id": "mem_profiling",   "lane": "evolution",   "col": 5, "type": "backend",  "label": "内存 Profiling", "sublabel": "ddab417 RFC 驱动开发", "width": 160 }
+  ],
+  "edges": [
+    { "id": "e1", "from": "initial_import",   "to": "dotnet_unwinder",   "variant": "emphasis", "role": "main" },
+    { "id": "e2", "from": "dotnet_unwinder",  "to": "collector_receiver","variant": "default",  "role": "main", "label": "架构分化" },
+    { "id": "e3", "from": "collector_receiver","to": "uprobes",          "variant": "default",  "role": "main", "label": "能力扩展" },
+    { "id": "e4", "from": "uprobes",          "to": "beam_plumbing",    "variant": "default",  "role": "main" },
+    { "id": "e5", "from": "beam_plumbing",    "to": "dotnet9",          "variant": "emphasis", "role": "main", "label": "语言矩阵扩大" },
+    { "id": "e6", "from": "dotnet9",          "to": "probes_framework", "variant": "emphasis", "role": "main", "label": "架构沉淀" },
+    { "id": "e7", "from": "probes_framework", "to": "mem_profiling",    "variant": "emphasis", "role": "main", "label": "设计驱动" }
+  ]
+}

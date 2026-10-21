@@ -1,0 +1,464 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "第 02 篇 · Go 与 eBPF 的对话",
+    "locale": "zh-CN",
+    "output": ".archify/architecture-ch02-20261012-163939/ch02.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/open-telemetry/opentelemetry-ebpf-profiler",
+      "revision": "3792d76dba7b856617d0c37135b2f9af2aa660cf",
+      "link_mode": "local-only"
+    }
+  },
+  "components": [
+    {
+      "id": "elf",
+      "type": "database",
+      "label": "tracer.ebpf.amd64",
+      "sublabel": "go:embed 嵌入",
+      "pos": [
+        30,
+        60
+      ],
+      "size": [
+        240,
+        64
+      ]
+    },
+    {
+      "id": "spec",
+      "type": "database",
+      "label": "CollectionSpec",
+      "sublabel": "图纸：程序/map/变量",
+      "pos": [
+        400,
+        60
+      ],
+      "size": [
+        260,
+        64
+      ],
+      "sources": [
+        {
+          "path": "support/support.go",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "syncv",
+      "type": "backend",
+      "label": "syncVariablesToMapSpecs",
+      "sublabel": "变量值同步回 map 初值",
+      "pos": [
+        770,
+        60
+      ],
+      "size": [
+        260,
+        64
+      ],
+      "sources": [
+        {
+          "path": "tracer/tracer.go",
+          "line": 615
+        }
+      ]
+    },
+    {
+      "id": "btf",
+      "type": "cloud",
+      "label": "BTF /sys/kernel/btf",
+      "sublabel": "类型字典 · 算字段偏移",
+      "pos": [
+        30,
+        240
+      ],
+      "size": [
+        240,
+        64
+      ],
+      "sources": [
+        {
+          "path": "tracer/systemconfig.go",
+          "line": 211
+        }
+      ]
+    },
+    {
+      "id": "rod",
+      "type": "backend",
+      "label": "loadRodataVars",
+      "sublabel": ".rodata 配置注入",
+      "pos": [
+        400,
+        240
+      ],
+      "size": [
+        260,
+        64
+      ],
+      "sources": [
+        {
+          "path": "tracer/systemconfig.go",
+          "line": 688
+        }
+      ]
+    },
+    {
+      "id": "perfev",
+      "type": "messagebus",
+      "label": "report_events",
+      "sublabel": "perf event array · 紧急通知",
+      "pos": [
+        1140,
+        240
+      ],
+      "size": [
+        260,
+        64
+      ]
+    },
+    {
+      "id": "maps",
+      "type": "backend",
+      "label": "loadAllMaps",
+      "sublabel": "改尺寸 · NewMap 建 map",
+      "pos": [
+        400,
+        420
+      ],
+      "size": [
+        260,
+        64
+      ],
+      "sources": [
+        {
+          "path": "tracer/tracer.go",
+          "line": 687
+        }
+      ]
+    },
+    {
+      "id": "rewrite",
+      "type": "backend",
+      "label": "rewriteMaps",
+      "sublabel": "占位符→真实 fd",
+      "pos": [
+        770,
+        420
+      ],
+      "size": [
+        260,
+        64
+      ],
+      "sources": [
+        {
+          "path": "tracer/tracer.go",
+          "line": 581
+        }
+      ]
+    },
+    {
+      "id": "pidev",
+      "type": "messagebus",
+      "label": "pid_events",
+      "sublabel": "哈希 map · 批量收割",
+      "pos": [
+        1140,
+        420
+      ],
+      "size": [
+        260,
+        64
+      ],
+      "sources": [
+        {
+          "path": "tracer/tracer.go",
+          "line": 986
+        }
+      ]
+    },
+    {
+      "id": "loadprog",
+      "type": "backend",
+      "label": "loadPerfUnwinders",
+      "sublabel": "加载 perf 程序 + 登记尾调用表",
+      "pos": [
+        30,
+        600
+      ],
+      "size": [
+        240,
+        64
+      ],
+      "sources": [
+        {
+          "path": "tracer/tracer.go",
+          "line": 800
+        }
+      ]
+    },
+    {
+      "id": "progs",
+      "type": "database",
+      "label": "perf_progs",
+      "sublabel": "PROG_ARRAY · 程序 fd",
+      "pos": [
+        400,
+        600
+      ],
+      "size": [
+        260,
+        64
+      ],
+      "sources": [
+        {
+          "path": "support/ebpf/interpreter_dispatcher.ebpf.c",
+          "line": 41
+        }
+      ]
+    },
+    {
+      "id": "loadprobe",
+      "type": "backend",
+      "label": "loadProbeUnwinders",
+      "sublabel": "kprobe 版本 · 改写 per_cpu_records",
+      "pos": [
+        1140,
+        600
+      ],
+      "size": [
+        260,
+        64
+      ],
+      "sources": [
+        {
+          "path": "tracer/tracer.go",
+          "line": 877
+        }
+      ]
+    },
+    {
+      "id": "types",
+      "type": "database",
+      "label": "types.go (cgo -godefs)",
+      "sublabel": "C 结构体→Go 类型",
+      "pos": [
+        30,
+        880
+      ],
+      "size": [
+        240,
+        64
+      ],
+      "sources": [
+        {
+          "path": "support/types.go",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "goes",
+      "type": "backend",
+      "label": "事件循环",
+      "sublabel": "startTraceEventMonitor · 250ms",
+      "pos": [
+        400,
+        880
+      ],
+      "size": [
+        260,
+        64
+      ],
+      "sources": [
+        {
+          "path": "tracer/events.go",
+          "line": 141
+        }
+      ]
+    },
+    {
+      "id": "ring",
+      "type": "messagebus",
+      "label": "trace_events",
+      "sublabel": "ring buffer · 高频 trace",
+      "pos": [
+        770,
+        720
+      ],
+      "size": [
+        260,
+        64
+      ],
+      "sources": [
+        {
+          "path": "support/ebpf/interpreter_dispatcher.ebpf.c",
+          "line": 127
+        }
+      ]
+    },
+    {
+      "id": "unsafe",
+      "type": "backend",
+      "label": "loadBpfTrace",
+      "sublabel": "unsafe 零拷贝解析",
+      "pos": [
+        1140,
+        880
+      ],
+      "size": [
+        260,
+        64
+      ],
+      "sources": [
+        {
+          "path": "tracer/tracer.go",
+          "line": 1100
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "elf-spec",
+      "from": "elf",
+      "to": "spec",
+      "label": "LoadCollectionSpec"
+    },
+    {
+      "id": "spec-syncv",
+      "from": "spec",
+      "to": "syncv",
+      "label": "复制变量值"
+    },
+    {
+      "id": "btf-rod",
+      "from": "btf",
+      "to": "rod",
+      "label": "字段偏移"
+    },
+    {
+      "id": "rod-spec",
+      "from": "rod",
+      "to": "spec",
+      "label": "Set 变量",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "syncv-maps",
+      "from": "syncv",
+      "to": "maps",
+      "label": "Contents 就绪",
+      "variant": "dashed"
+    },
+    {
+      "id": "maps-rewrite",
+      "from": "maps",
+      "to": "rewrite",
+      "label": "fd 可用"
+    },
+    {
+      "id": "rewrite-loadprog",
+      "from": "rewrite",
+      "to": "loadprog",
+      "label": "指令改写完成",
+      "variant": "dashed"
+    },
+    {
+      "id": "rewrite-loadprobe",
+      "from": "rewrite",
+      "to": "loadprobe",
+      "label": "同套程序 kprobe 化",
+      "variant": "dashed"
+    },
+    {
+      "id": "loadprog-progs",
+      "from": "loadprog",
+      "to": "progs",
+      "label": "登记 fd"
+    },
+    {
+      "id": "progs-ring",
+      "from": "progs",
+      "to": "ring",
+      "label": "尾调用回溯",
+      "variant": "dashed"
+    },
+    {
+      "id": "ring-goes",
+      "from": "ring",
+      "to": "goes",
+      "label": "轮询读空"
+    },
+    {
+      "id": "perfev-goes",
+      "from": "perfev",
+      "to": "goes",
+      "label": "事件驱动唤醒",
+      "variant": "dashed"
+    },
+    {
+      "id": "pidev-goes",
+      "from": "pidev",
+      "to": "goes",
+      "label": "BatchLookupAndDelete",
+      "variant": "dashed"
+    },
+    {
+      "id": "goes-unsafe",
+      "from": "goes",
+      "to": "unsafe",
+      "label": "原始字节"
+    },
+    {
+      "id": "types-unsafe",
+      "from": "types",
+      "to": "unsafe",
+      "label": "布局契约"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "手工流水线三理由",
+      "items": [
+        "map 大小要加载时动态调整（ringbuf = 采样率×CPU×Trace 体积）",
+        "要探测内核特性：probeNoPrealloc 用玩具程序试探",
+        "同一批程序要改造成 kprobe 版本并改写 per_cpu_records 引用"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": ".rodata 配置注入",
+      "items": [
+        "BPF_RODATA_VAR 声明 → ELF .rodata.var 段",
+        "加载前 Set 值 → 程序读到的就是新值",
+        "BTF 算出 task_struct 字段偏移注入；读不到 BTF 时用临时探针退路"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "三条回传通道",
+      "items": [
+        "trace_events：ring buffer 轮询，高频调用栈",
+        "report_events：perf event array 阻塞，低频紧急通知",
+        "pid_events：哈希 map 批量读删，PID 集合"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "C/Go 契约",
+      "items": [
+        "cgo -godefs 从 types.h 生成 types.go，diff 守门",
+        "Trace 变长区用四个 u16 游标自描述",
+        "loadBpfTrace unsafe 强转前先验长度下限"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,286 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "第 04 篇 · Stack Delta 机制的组件全景",
+    "locale": "zh-CN",
+    "output": ".archify/ch04/ch04.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/open-telemetry/opentelemetry-ebpf-profiler",
+      "revision": "3792d76dba7b856617d0c37135b2f9af2aa660cf",
+      "link_mode": "local-only"
+    }
+  },
+  "components": [
+    {
+      "id": "compiler",
+      "type": "cloud",
+      "label": "GCC / Clang -O2",
+      "sublabel": "生成 .eh_frame CFI 字节码",
+      "pos": [30, 60],
+      "size": [240, 64]
+    },
+    {
+      "id": "eh_frame",
+      "type": "database",
+      "label": ".eh_frame / .debug_frame / .gopclntab",
+      "sublabel": "strip 保留 · C++ 异常必须",
+      "pos": [30, 220],
+      "size": [300, 64],
+      "sources": [
+        { "path": "nativeunwind/elfunwindinfo/README.md", "line": 23 }
+      ]
+    },
+    {
+      "id": "extract",
+      "type": "backend",
+      "label": "ExtractELF",
+      "sublabel": "gopclntab → eh_frame → debug_frame 优先级",
+      "pos": [420, 220],
+      "size": [270, 64],
+      "sources": [
+        { "path": "nativeunwind/elfunwindinfo/stackdeltaextraction.go", "line": 150 }
+      ]
+    },
+    {
+      "id": "dwarf_vm",
+      "type": "backend",
+      "label": "DWARF 虚拟机",
+      "sublabel": "elfehframe.go state.step · 130 行 switch",
+      "pos": [770, 220],
+      "size": [270, 64],
+      "sources": [
+        { "path": "nativeunwind/elfunwindinfo/elfehframe.go", "line": 534 }
+      ]
+    },
+    {
+      "id": "unwind_info_array",
+      "type": "database",
+      "label": "unwind_info_array (全局去重)",
+      "sublabel": "≤16384 种 · UnwindInfo 12 字节",
+      "pos": [30, 420],
+      "size": [280, 72],
+      "sources": [
+        { "path": "support/ebpf/types.h", "line": 979 },
+        { "path": "support/ebpf/types.h", "line": 413 }
+      ]
+    },
+    {
+      "id": "merge_op",
+      "type": "backend",
+      "label": "calculateMergeOpcode",
+      "sublabel": "相邻 ±8 合并 · 省 delta 条数",
+      "pos": [400, 420],
+      "size": [260, 64],
+      "sources": [
+        { "path": "processmanager/execinfomanager/manager.go", "line": 460 }
+      ]
+    },
+    {
+      "id": "buckets",
+      "type": "database",
+      "label": "exe_id_to_X_stack_deltas (16 桶)",
+      "sublabel": "2^8 ~ 2^23 条 · HASH_OF_MAPS 分桶",
+      "pos": [770, 420],
+      "size": [280, 72],
+      "sources": [
+        { "path": "support/ebpf/native_stack_trace.ebpf.c", "line": 77 },
+        { "path": "support/ebpf/types.h", "line": 1182 }
+      ]
+    },
+    {
+      "id": "page_info",
+      "type": "database",
+      "label": "stack_delta_page_to_info",
+      "sublabel": "64KB 分页 · {fileID, 页号} → 元信息",
+      "pos": [770, 600],
+      "size": [280, 72],
+      "sources": [
+        { "path": "support/ebpf/types.h", "line": 1066 },
+        { "path": "support/ebpf/types.h", "line": 1082 }
+      ]
+    },
+    {
+      "id": "gsd",
+      "type": "backend",
+      "label": "get_stack_delta",
+      "sublabel": "页表 → 选桶 → 16 步手工二分",
+      "pos": [400, 780],
+      "size": [280, 72],
+      "sources": [
+        { "path": "support/ebpf/native_stack_trace.h", "line": 61 }
+      ]
+    },
+    {
+      "id": "uof",
+      "type": "backend",
+      "label": "unwind_one_frame",
+      "sublabel": "CFA = reg + param · 命令分流",
+      "pos": [30, 780],
+      "size": [280, 72],
+      "sources": [
+        { "path": "support/ebpf/native_stack_trace.h", "line": 225 }
+      ]
+    },
+    {
+      "id": "cfa_resolve",
+      "type": "backend",
+      "label": "unwind_calc_register (+ deref)",
+      "sublabel": "CFA = *(BASE + pre) + post",
+      "pos": [30, 940],
+      "size": [280, 72],
+      "sources": [
+        { "path": "support/ebpf/native_stack_trace.h", "line": 162 },
+        { "path": "support/ebpf/native_stack_trace.h", "line": 188 }
+      ]
+    },
+    {
+      "id": "unwind_state",
+      "type": "database",
+      "label": "UnwindState",
+      "sublabel": "当前 PC/SP/FP 寄存器快照",
+      "pos": [30, 600],
+      "size": [240, 64],
+      "sources": [
+        { "path": "support/ebpf/types.h", "line": 736 }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "comp-eh",
+      "from": "compiler",
+      "to": "eh_frame",
+      "label": "编译产出"
+    },
+    {
+      "id": "eh-extract",
+      "from": "eh_frame",
+      "to": "extract",
+      "label": "读取 ELF 节"
+    },
+    {
+      "id": "extract-vm",
+      "from": "extract",
+      "to": "dwarf_vm",
+      "label": "parseFDE 主循环"
+    },
+    {
+      "id": "vm-array",
+      "from": "dwarf_vm",
+      "to": "unwind_info_array",
+      "label": "getUnwindInfoX86 归约"
+    },
+    {
+      "id": "vm-merge",
+      "from": "dwarf_vm",
+      "to": "merge_op",
+      "label": "StackDelta 序列"
+    },
+    {
+      "id": "array-merge",
+      "from": "unwind_info_array",
+      "to": "merge_op",
+      "label": "去重索引",
+      "variant": "dashed"
+    },
+    {
+      "id": "merge-buckets",
+      "from": "merge_op",
+      "to": "buckets",
+      "label": "写入内层数组"
+    },
+    {
+      "id": "buckets-page",
+      "from": "buckets",
+      "to": "page_info",
+      "label": "mapID 选桶"
+    },
+    {
+      "id": "page-gsd",
+      "from": "page_info",
+      "to": "gsd",
+      "label": "firstDelta + numDeltas"
+    },
+    {
+      "id": "buckets-gsd",
+      "from": "buckets",
+      "to": "gsd",
+      "label": "内层数组二分"
+    },
+    {
+      "id": "gsd-uof",
+      "from": "gsd",
+      "to": "uof",
+      "label": "UnwindInfo 索引"
+    },
+    {
+      "id": "uof-cfa",
+      "from": "uof",
+      "to": "cfa_resolve",
+      "label": "表达式计算"
+    },
+    {
+      "id": "state-uof",
+      "from": "unwind_state",
+      "to": "uof",
+      "label": "读写状态",
+      "variant": "dashed"
+    },
+    {
+      "id": "state-gsd",
+      "from": "unwind_state",
+      "to": "gsd",
+      "label": "text_section_offset",
+      "variant": "dashed"
+    },
+    {
+      "id": "cfa-pc",
+      "from": "cfa_resolve",
+      "to": "unwind_state",
+      "label": "CFA-8 读 PC 推进一层",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "用户态离线：DWARF 字节码 → StackDelta",
+      "items": [
+        ".eh_frame 因 C++ 异常而存在，strip 保留，无需 debuginfo",
+        "elfehframe.go 虚拟机解释 CFI 字节码（cfaDefCfa / cfaOffset 等操作码）",
+        "getUnwindInfoX86 把「CFA = rsp + offset」归约为 UnwindInfo{baseReg, param}"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "四层内存压缩",
+      "items": [
+        "64KB 分页：addrLow 只需 u16，页号由 key 提供",
+        "全局去重：UnwindInfo 全局哈希 ≤16384 种，每条 StackDelta 仅存 2 字节索引",
+        "mergeOpcode：相邻 push 序列 ±8 合并，一条 delta 干两条的活",
+        "16 桶 map-in-map：2^8~2^23 按需分配，工具几百条到 Chrome 百万级都适配"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "内核态在线：16 步手工二分 + 两种表达式",
+      "items": [
+        "get_stack_delta：页表 → 选桶 → 内层数组 16 步二分（64KB 页最多 2^16 条 delta）",
+        "表达式 1：CFA = regs[baseReg] + param（unwind_calc_register）",
+        "表达式 2：CFA = *(BASE + pre) + post（解引用款，应对栈对齐）",
+        "命令分流：STOP 栈底 / PLT 硬编码公式 / SIGNAL 恢复寄存器 / FP 帧指针 / GO_MORESTACK"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "信息源优先级 + 入口合成",
+      "items": [
+        ".gopclntab（Go 函数最准）→ .eh_frame（C/C++/Rust 主力）→ .debug_frame → .gnu_debuglink",
+        "入口点 _start 人工合成 STOP 标记，防 musl 等无 FDE libc 回溯越界",
+        "信号跳板用字节序列精确匹配，整条 FDE 标记为 UnwindInfoSignal"
+      ]
+    }
+  ]
+}

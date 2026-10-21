@@ -1,0 +1,396 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "第 01 篇 · 一颗采样数据的诞生",
+    "locale": "zh-CN",
+    "output": ".archify/architecture-ch01-20261012-163939/ch01.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/open-telemetry/opentelemetry-ebpf-profiler",
+      "revision": "3792d76dba7b856617d0c37135b2f9af2aa660cf",
+      "link_mode": "local-only"
+    }
+  },
+  "components": [
+    {
+      "id": "clang",
+      "type": "cloud",
+      "label": "clang-17 / llvm / llc",
+      "sublabel": "编译 eBPF 全家桶",
+      "pos": [
+        30,
+        80
+      ],
+      "size": [
+        250,
+        64
+      ],
+      "sources": [
+        {
+          "path": "support/ebpf/Makefile",
+          "line": 67
+        }
+      ]
+    },
+    {
+      "id": "elf",
+      "type": "database",
+      "label": "tracer.ebpf.amd64",
+      "sublabel": "BPF ELF 字节码",
+      "pos": [
+        360,
+        80
+      ],
+      "size": [
+        250,
+        64
+      ]
+    },
+    {
+      "id": "goembed",
+      "type": "backend",
+      "label": "//go:embed 嵌入",
+      "sublabel": "tracerData []byte",
+      "pos": [
+        690,
+        80
+      ],
+      "size": [
+        250,
+        64
+      ],
+      "sources": [
+        {
+          "path": "support/support_amd64.go",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "id": "entry",
+      "type": "backend",
+      "label": "native_tracer_entry",
+      "sublabel": "perf_event 入口 · 19 行",
+      "pos": [
+        30,
+        330
+      ],
+      "size": [
+        250,
+        80
+      ],
+      "sources": [
+        {
+          "path": "support/ebpf/native_stack_trace.ebpf.c",
+          "line": 201
+        }
+      ]
+    },
+    {
+      "id": "collect",
+      "type": "backend",
+      "label": "collect_trace",
+      "sublabel": "总装车间：校验/过滤/抓内核栈/调度",
+      "pos": [
+        360,
+        330
+      ],
+      "size": [
+        250,
+        80
+      ],
+      "sources": [
+        {
+          "path": "support/ebpf/tracemgmt.h",
+          "line": 1186
+        }
+      ]
+    },
+    {
+      "id": "unwinders",
+      "type": "messagebus",
+      "label": "各语言 unwinder",
+      "sublabel": "unwind_native / hotspot / python …",
+      "pos": [
+        690,
+        330
+      ],
+      "size": [
+        250,
+        80
+      ]
+    },
+    {
+      "id": "perfev",
+      "type": "cloud",
+      "label": "perf event × CPU",
+      "sublabel": "cpu-clock · 20Hz · AllThreads",
+      "pos": [
+        30,
+        590
+      ],
+      "size": [
+        250,
+        64
+      ],
+      "sources": [
+        {
+          "path": "tracer/tracer.go",
+          "line": 1254
+        }
+      ]
+    },
+    {
+      "id": "progs",
+      "type": "database",
+      "label": "perf_progs",
+      "sublabel": "PROG_ARRAY 尾调用表",
+      "pos": [
+        360,
+        590
+      ],
+      "size": [
+        250,
+        64
+      ],
+      "sources": [
+        {
+          "path": "support/ebpf/interpreter_dispatcher.ebpf.c",
+          "line": 41
+        }
+      ]
+    },
+    {
+      "id": "stop",
+      "type": "backend",
+      "label": "unwind_stop + send_trace",
+      "sublabel": "收尾 · 写 ring buffer",
+      "pos": [
+        690,
+        590
+      ],
+      "size": [
+        250,
+        64
+      ],
+      "sources": [
+        {
+          "path": "support/ebpf/interpreter_dispatcher.ebpf.c",
+          "line": 272
+        }
+      ]
+    },
+    {
+      "id": "ring",
+      "type": "messagebus",
+      "label": "trace_events ring buffer",
+      "sublabel": "max_entries 由 Go 按机器规模定",
+      "pos": [
+        360,
+        860
+      ],
+      "size": [
+        250,
+        64
+      ],
+      "sources": [
+        {
+          "path": "support/ebpf/interpreter_dispatcher.ebpf.c",
+          "line": 127
+        }
+      ]
+    },
+    {
+      "id": "goes",
+      "type": "backend",
+      "label": "Go 事件轮询 goroutine",
+      "sublabel": "每 250ms 非阻塞读空",
+      "pos": [
+        360,
+        1040
+      ],
+      "size": [
+        250,
+        64
+      ],
+      "sources": [
+        {
+          "path": "tracer/events.go",
+          "line": 141
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "c-e",
+      "from": "clang",
+      "to": "elf",
+      "label": "编成单个 ELF"
+    },
+    {
+      "id": "e-g",
+      "from": "elf",
+      "to": "goembed",
+      "label": "缝进 Go 二进制"
+    },
+    {
+      "id": "entry-collect",
+      "from": "entry",
+      "to": "collect",
+      "label": "寄存器 + 时间戳"
+    },
+    {
+      "id": "collect-unw",
+      "from": "collect",
+      "to": "unwinders",
+      "label": "tail_call 跳转"
+    },
+    {
+      "id": "pe-entry",
+      "from": "perfev",
+      "to": "entry",
+      "label": "SetBPF 绑定"
+    },
+    {
+      "id": "g-e",
+      "from": "goembed",
+      "to": "entry",
+      "label": "loadProgram 加载",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "left",
+      "via": [
+        [
+          815,
+          320
+        ],
+        [
+          20,
+          320
+        ],
+        [
+          20,
+          370
+        ],
+        [
+          30,
+          370
+        ]
+      ]
+    },
+    {
+      "id": "g-p",
+      "from": "goembed",
+      "to": "progs",
+      "label": "登记 fd",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "left",
+      "via": [
+        [
+          815,
+          320
+        ],
+        [
+          20,
+          320
+        ],
+        [
+          20,
+          740
+        ],
+        [
+          300,
+          740
+        ],
+        [
+          300,
+          622
+        ],
+        [
+          360,
+          622
+        ]
+      ]
+    },
+    {
+      "id": "unw-stop",
+      "from": "unwinders",
+      "to": "stop",
+      "label": "回传"
+    },
+    {
+      "id": "stop-ring",
+      "from": "stop",
+      "to": "ring",
+      "label": "bpf_ringbuf_output",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "via": [
+        [
+          815,
+          654
+        ],
+        [
+          815,
+          800
+        ],
+        [
+          485,
+          800
+        ],
+        [
+          485,
+          860
+        ]
+      ]
+    },
+    {
+      "id": "ring-goes",
+      "from": "ring",
+      "to": "goes",
+      "label": "BPF_RB_NO_WAKEUP 轮询"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "编译链",
+      "items": [
+        "clang -emit-llvm → llvm-link → llc -march=bpf → tracer.ebpf.<arch>",
+        "llvm-strip 后 print_instruction_count.sh 统计每个程序指令数",
+        "所有解释器回溯器编进同一个 ELF（全家桶）"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "挂载链",
+      "items": [
+        "perf.CPUClock + SetSampleFreq(20) → 每 CPU 一个 perf event",
+        "perfEvent.SetBPF 把入口程序 fd 绑到事件",
+        "控制器启动时 AttachTracer + EnableProfiling"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "verifier 三限制与应对",
+      "items": [
+        "4096 指令 → 尾调用拆程序",
+        "512 字节栈 → 大对象放 per-CPU map",
+        "有界循环 → NATIVE_FRAMES_PER_PROGRAM=5"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "回传链",
+      "items": [
+        "send_trace 只发有效载荷：offsetof(variable_data)+variable_data_end*8",
+        "MIN 钳制写给 verifier 看",
+        "BPF_RB_NO_WAKEUP：内核不敲门，因为收信人定时自取",
+        "每 250ms ReadInto 非阻塞读空 → traceOutChan"
+      ]
+    }
+  ]
+}

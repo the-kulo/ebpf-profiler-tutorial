@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "第 09 篇 · 演进史：跟随提交历史看新能力如何落地",
+    "locale": "zh-CN",
+    "output": ".archify/ch09/ch09.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/open-telemetry/opentelemetry-ebpf-profiler",
+      "revision": "3792d76dba7b856617d0c37135b2f9af2aa660cf",
+      "link_mode": "local-only"
+    }
+  },
+  "components": [
+    {
+      "id": "initial",
+      "type": "database",
+      "label": "初始捐献 ff5b644",
+      "sublabel": "2024-04 · 445 文件 · 6.7 万行 · 8 语言 unwinder",
+      "pos": [30, 60],
+      "size": [300, 64]
+    },
+    {
+      "id": "dotnet",
+      "type": "backend",
+      "label": ".NET Unwinder 3c6d811",
+      "sublabel": "2024-06 · 首个新增语言 · 全栈改动",
+      "pos": [30, 220],
+      "size": [300, 64],
+      "sources": [
+        { "path": "support/ebpf/types.h", "line": 396 }
+      ]
+    },
+    {
+      "id": "collector",
+      "type": "external",
+      "label": "Collector Receiver 9c4b3f2",
+      "sublabel": "2025-01 · 8 文件 245 行 · 双形态架构",
+      "pos": [30, 380],
+      "size": [300, 64]
+    },
+    {
+      "id": "uprobes",
+      "type": "backend",
+      "label": "Uprobes → Generic Probes",
+      "sublabel": "2025-08 → 2025-12 · fa0cef5 → 泛化",
+      "pos": [30, 540],
+      "size": [300, 64]
+    },
+    {
+      "id": "beam",
+      "type": "backend",
+      "label": "BEAM no-op Plumbing 77e078d",
+      "sublabel": "2025-11 · 21 文件 370 行 · 先骨架后血肉",
+      "pos": [30, 700],
+      "size": [300, 64]
+    },
+    {
+      "id": "dotnet910",
+      "type": "backend",
+      "label": ".NET 9/10 版本跟进",
+      "sublabel": "2026-01 · ab2320f / cbec671 · 守门员版本边界",
+      "pos": [430, 220],
+      "size": [270, 64]
+    },
+    {
+      "id": "probes_fw",
+      "type": "backend",
+      "label": "Probes 框架 bad4ab1",
+      "sublabel": "2026-08 · 抽象接口 · 先基建再迁移 off-CPU",
+      "pos": [430, 540],
+      "size": [280, 64]
+    },
+    {
+      "id": "mem_prof",
+      "type": "backend",
+      "label": "内存 Profiling ddab417→",
+      "sublabel": "2026-08+ · RFC 先行 · N/M 分步 · 进行中",
+      "pos": [430, 700],
+      "size": [300, 64]
+    },
+    {
+      "id": "checklist_a",
+      "type": "database",
+      "label": "清单 A：新增语言 11 步",
+      "sublabel": "BPF 程序→枚举槽位→proc map→loader→metrics→测试",
+      "pos": [830, 60],
+      "size": [310, 64]
+    },
+    {
+      "id": "checklist_b",
+      "type": "database",
+      "label": "清单 B：大型特性协作",
+      "sublabel": "RFC → 文档迭代 → 基建先行 → N/M 分步 → 自带测试",
+      "pos": [830, 340],
+      "size": [310, 64]
+    },
+    {
+      "id": "patterns",
+      "type": "messagebus",
+      "label": "复用工程模式",
+      "sublabel": "no-op plumbing · 版本守门员 · --follow 追改名",
+      "pos": [830, 540],
+      "size": [310, 64]
+    }
+  ],
+  "connections": [
+    { "id": "init-dotnet", "from": "initial", "to": "dotnet", "label": "首个增量语言支持" },
+    { "id": "dotnet-coll", "from": "dotnet", "to": "collector", "label": "架构分化" },
+    { "id": "coll-uprobes", "from": "collector", "to": "uprobes", "label": "能力扩展" },
+    { "id": "uprobes-beam", "from": "uprobes", "to": "beam", "label": "no-op 占位模式" },
+    { "id": "dotnet-910", "from": "dotnet", "to": "dotnet910", "label": "版本跟进子模式" },
+    { "id": "uprobes-fw", "from": "uprobes", "to": "probes_fw", "label": "泛化 → 框架化" },
+    { "id": "beam-mem", "from": "beam", "to": "mem_prof", "label": "模式复用" },
+    { "id": "fw-mem", "from": "probes_fw", "to": "mem_prof", "label": "基建铺路" },
+    { "id": "mem-checklist", "from": "mem_prof", "to": "checklist_b", "label": "提炼清单", "variant": "dashed" },
+    { "id": "dotnet-listA", "from": "dotnet", "to": "checklist_a", "label": "提炼清单", "variant": "dashed" },
+    { "id": "beam-listA", "from": "beam", "to": "checklist_a", "label": "提炼清单", "variant": "dashed" },
+    { "id": "listA-patterns", "from": "checklist_a", "to": "patterns", "label": "工程模式", "variant": "dashed" },
+    { "id": "listB-patterns", "from": "checklist_b", "to": "patterns", "label": "工程模式", "variant": "dashed" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "演进时间线",
+      "items": [
+        "2024-04：初始捐献 ff5b644——开源第一天就是工业级",
+        "2024-06 → 2026-08+：dotnet → BEAM → .NET9/10 → Probes 框架 → 内存 Profiling",
+        "每次「新增语言」是一次跨越内核态与用户态的全栈改动"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "协作模式",
+      "items": [
+        "no-op plumbing：先合并空壳管线 → 后续 PR 填血肉",
+        "RFC + N/M 系列：设计文档先行 → 编号分步落地",
+        "先抽象接口再迁移存量：Probes 框架化 → off-CPU 搬家"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "考古工具链",
+      "items": [
+        "git log --reverse --oneline 看起源与时间线",
+        "git show --stat 用文件清单反推改动性质",
+        "git log --follow 追改名——uprobe.ebpf.c → generic_probe.ebpf.c"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "增量提交 = 最佳教材",
+      "items": [
+        "巨无霸初始提交别逐行读，用 --stat 建立地图",
+        "增量提交才是学「怎么加功能」的最好素材",
+        "搜索版本号边界条件 → 最快理解「这个项目支持到哪一版」"
+      ]
+    }
+  ]
+}

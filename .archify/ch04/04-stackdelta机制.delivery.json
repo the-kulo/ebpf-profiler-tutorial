@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "d5232bac-d666-44d5-b2c2-dd3e351dda8b",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "C:\\Users\\gly\\Desktop\\think\\ebpf-profiler-tutorial\\.archify\\flowcharts-20260114-140000\\candidate-04.json",
+  "output": "C:\\Users\\gly\\Desktop\\think\\ebpf-profiler-tutorial\\.archify\\flowcharts-20260114-140000\\04-StackDelta机制.html",
+  "specification": {
+    "sha256": "108a240a872a713932f5ea9789f59c0808c90df273ad7c53f2d0556211f97d56",
+    "bytes": 4265
+  },
+  "artifact": {
+    "sha256": "4965546c85c691fbe59a1123a5490cdc8d46a025409067a3b1dbebb3f7c902a0",
+    "bytes": 763281
+  }
+}

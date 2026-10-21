@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "6a761542-e488-4f41-8559-350de70419c8",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "C:\\Users\\gly\\Desktop\\think\\ebpf-profiler-tutorial\\.archify\\ch08\\candidate.json",
+  "output": "C:\\Users\\gly\\Desktop\\think\\ebpf-profiler-tutorial\\.archify\\ch08\\ch08.html",
+  "specification": {
+    "sha256": "1498cfa38dd1a4a7d05c1f7a76379f895f212bb13bd62404a2161869fbc4e8ed",
+    "bytes": 6346
+  },
+  "artifact": {
+    "sha256": "08a42d1e5a4efe8fd69b78f50e02b21f5c7c530a9dac488338406497fd46b665",
+    "bytes": 771705
+  }
+}

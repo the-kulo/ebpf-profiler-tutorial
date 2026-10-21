@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "2f6e15ed-e5c1-4fb1-a192-891c97ea2de2",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "C:\\Users\\gly\\Desktop\\think\\ebpf-profiler-tutorial\\.archify\\flowcharts-20260114-140000\\candidate-09.json",
+  "output": "C:\\Users\\gly\\Desktop\\think\\ebpf-profiler-tutorial\\.archify\\flowcharts-20260114-140000\\09-演进史专题.html",
+  "specification": {
+    "sha256": "11cc6e1859be7433f14b8f47436f53d4c83cb4e810ff358b93df35b8aee0b7da",
+    "bytes": 3205
+  },
+  "artifact": {
+    "sha256": "0194b3b85ed8c8adca31d9a5d55d242f9241e81f524945177a28b0724b471514",
+    "bytes": 754192
+  }
+}

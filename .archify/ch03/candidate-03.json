@@ -1,0 +1,46 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "03: eBPF栈回溯 — FRAME_POINTER展开流程",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "output": ".archify/flowcharts-20260114-140000/03-栈回溯入门.html"
+  },
+  "lanes": [
+    { "id": "user", "label": "用户态采集" },
+    { "id": "bpf", "label": "eBPF程序" },
+    { "id": "table", "label": "栈数据" }
+  ],
+  "phases": [
+    { "id": "sample", "label": "采样触发", "fromCol": 0, "toCol": 1 },
+    { "id": "lookup", "label": "查表分支", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "unwind", "label": "帧展开循环", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "groups": [
+    { "id": "unwind_body", "label": "展开循环体", "lane": "bpf", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "mainPath": ["perf", "bpf_entry", "delta", "fp_branch", "probe_read", "state_xfer", "mark_ret", "push_frame"],
+  "nodes": [
+    { "id": "perf", "lane": "user", "col": 0, "type": "external", "label": "perf采样", "sublabel": "获取pc/sp/fp", "width": 150 },
+    { "id": "bpf_entry", "lane": "bpf", "col": 1, "type": "backend", "label": "BPF入口", "sublabel": "接收寄存器值", "width": 150 },
+    { "id": "delta", "lane": "table", "col": 1, "type": "database", "label": "Stack Delta表", "sublabel": "查询unwind指令", "width": 155 },
+    { "id": "fp_branch", "lane": "bpf", "col": 2, "type": "security", "label": "FRAME_POINTER分支", "width": 160 },
+    { "id": "probe_read", "lane": "bpf", "col": 3, "type": "backend", "label": "bpf_probe_read_user", "sublabel": "读fp处16字节", "width": 160 },
+    { "id": "state_xfer", "lane": "bpf", "col": 4, "type": "backend", "label": "状态迁移", "sublabel": "fp→regs[0], pc→regs[1]-1", "width": 160 },
+    { "id": "mark_ret", "lane": "bpf", "col": 5, "type": "backend", "label": "标记return_address", "width": 155, "yOffset": -70 },
+    { "id": "push_frame", "lane": "bpf", "col": 5, "type": "backend", "label": "push_native入帧", "width": 150, "yOffset": 0 },
+    { "id": "loop", "lane": "bpf", "col": 5, "type": "backend", "label": "循环判断", "sublabel": "fp=0或栈底?", "width": 155, "yOffset": 70 }
+  ],
+  "edges": [
+    { "id": "e1", "from": "perf", "to": "bpf_entry", "variant": "emphasis", "label": "pc/sp/fp" },
+    { "id": "e2", "from": "bpf_entry", "to": "delta", "label": "查表" },
+    { "id": "e3", "from": "delta", "to": "fp_branch", "variant": "emphasis", "label": "unwind指令" },
+    { "id": "e4", "from": "fp_branch", "to": "probe_read", "variant": "emphasis", "label": "FP分支" },
+    { "id": "e5", "from": "probe_read", "to": "state_xfer" },
+    { "id": "e6", "from": "state_xfer", "to": "mark_ret" },
+    { "id": "e7", "from": "mark_ret", "to": "push_frame" },
+    { "id": "e8", "from": "push_frame", "to": "loop" },
+    { "id": "e9", "from": "loop", "to": "fp_branch", "variant": "dashed", "label": "fp≠0, 继续展开", "role": "return" }
+  ]
+}
